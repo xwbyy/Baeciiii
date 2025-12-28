@@ -1,0 +1,58 @@
+<%- include('partials/header') %>
+
+<section class="min-h-[70vh] flex items-center justify-center px-3 sm:px-4 py-6 sm:py-10">
+  <div class="absolute top-10 left-5 w-40 sm:w-64 h-40 sm:h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
+  <div class="absolute bottom-10 right-5 w-48 sm:w-80 h-48 sm:h-80 bg-pink-500/10 rounded-full blur-3xl"></div>
+  
+  <div class="w-full max-w-sm sm:max-w-md relative z-10 fade-in">
+    <div class="glass-card rounded-2xl sm:rounded-3xl p-5 sm:p-7">
+      <div class="text-center mb-5 sm:mb-6">
+        <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mx-auto mb-3">
+          <i class="fas fa-user text-lg sm:text-xl"></i>
+        </div>
+        <h1 class="text-lg sm:text-xl font-bold">Selamat Datang Kembali</h1>
+        <p class="text-gray-400 text-xs sm:text-sm mt-1">Masuk ke akun Baeci Market Anda</p>
+      </div>
+      
+      <% if (error) { %>
+        <div class="bg-red-500/20 border border-red-500/50 text-red-300 px-3 py-2 rounded-lg mb-4 flex items-center gap-2 text-xs sm:text-sm">
+          <i class="fas fa-exclamation-circle"></i>
+          <span><%= error %></span>
+        </div>
+      <% } %>
+      
+      <form action="/auth/login" method="POST" class="space-y-4">
+        <div>
+          <label class="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5">Email atau Username</label>
+          <div class="relative">
+            <i class="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+            <input type="text" name="email" required
+              class="w-full input-glass rounded-lg py-2.5 sm:py-3 pl-10 pr-3 text-white placeholder-gray-500 text-sm"
+              placeholder="email@example.com">
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs sm:text-sm font-medium text-gray-300 mb-1.5">Password</label>
+          <div class="relative">
+            <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i>
+            <input type="password" name="password" required
+              class="w-full input-glass rounded-lg py-2.5 sm:py-3 pl-10 pr-3 text-white placeholder-gray-500 text-sm"
+              placeholder="Masukkan password">
+          </div>
+        </div>
+        
+        <button type="submit" class="w-full btn-primary py-2.5 sm:py-3 rounded-lg font-semibold text-sm">
+          Masuk
+        </button>
+      </form>
+      
+      <div class="mt-4 text-center text-gray-400 text-xs sm:text-sm">
+        Belum punya akun? 
+        <a href="/auth/register" class="text-purple-400 hover:text-purple-300 font-medium">Daftar Sekarang</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

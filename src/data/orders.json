@@ -1,0 +1,58 @@
+[
+  {
+    "id": "O1766854245874",
+    "userId": "U1766850783161",
+    "username": "Vegatech",
+    "productType": "server",
+    "productId": "S1",
+    "productName": "Aline hh",
+    "quantity": 1,
+    "totalPrice": 5000,
+    "status": "completed",
+    "serverDetails": "{\"ram\":\"1GB\",\"cpu\":\"50%\",\"disk\":\"5GB\",\"location\":\"Singapore\",\"duration\":\"1month\"}",
+    "createdAt": "2025-12-27T16:50:45.874Z",
+    "completedAt": ""
+  },
+  {
+    "id": "O1766854360053",
+    "userId": "U1",
+    "username": "admin123",
+    "productType": "server",
+    "productId": "S1",
+    "productName": "Pinaa",
+    "quantity": 1,
+    "totalPrice": 5000,
+    "status": "completed",
+    "serverDetails": "{\"ram\":\"1GB\",\"cpu\":\"50%\",\"disk\":\"5GB\",\"location\":\"Singapore\",\"duration\":\"1month\"}",
+    "createdAt": "2025-12-27T16:52:40.053Z",
+    "completedAt": ""
+  },
+  {
+    "id": "O1766855130639",
+    "userId": "U1",
+    "username": "admin123",
+    "productType": "server",
+    "productId": "S1",
+    "productName": "Pinaa",
+    "quantity": 1,
+    "totalPrice": 5000,
+    "status": "completed",
+    "serverDetails": "{\"ram\":\"1GB\",\"cpu\":\"50%\",\"disk\":\"5GB\",\"location\":\"Singapore\",\"duration\":\"1 Bulan\",\"panelUserId\":99,\"panelServerId\":121,\"panelUsername\":\"pinaa9293\",\"panelPassword\":\"pinaa9293a009bf2a\",\"panelUrl\":\"https://crash.raflydev.my.id\"}",
+    "createdAt": "2025-12-27T17:05:30.639Z",
+    "completedAt": ""
+  },
+  {
+    "id": "O1766856685837",
+    "userId": "U1",
+    "username": "admin123",
+    "productType": "product",
+    "productId": "P2",
+    "productName": "Akun Netflix Premium 1 Bulan",
+    "quantity": 1,
+    "totalPrice": 25000,
+    "status": "completed",
+    "serverDetails": "",
+    "createdAt": "2025-12-27T17:31:25.837Z",
+    "completedAt": ""
+  }
+]

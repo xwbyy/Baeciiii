@@ -1,0 +1,62 @@
+[
+  {
+    "id": "S1",
+    "name": "Starter Panel",
+    "ram": "1GB",
+    "cpu": "50%",
+    "disk": "5GB",
+    "price": 5000,
+    "location": "Singapore",
+    "duration": "bulan",
+    "isActive": true,
+    "description": "Cocok untuk bot sederhana dan testing"
+  },
+  {
+    "id": "S2",
+    "name": "Basic Panel",
+    "ram": "2GB",
+    "cpu": "100%",
+    "disk": "10GB",
+    "price": 10000,
+    "location": "Singapore",
+    "duration": "bulan",
+    "isActive": true,
+    "description": "Untuk bot dengan traffic sedang"
+  },
+  {
+    "id": "S3",
+    "name": "Standard Panel",
+    "ram": "4GB",
+    "cpu": "150%",
+    "disk": "20GB",
+    "price": 20000,
+    "location": "Singapore",
+    "duration": "bulan",
+    "isActive": true,
+    "description": "Untuk bot dengan banyak fitur"
+  },
+  {
+    "id": "S4",
+    "name": "Pro Panel",
+    "ram": "6GB",
+    "cpu": "200%",
+    "disk": "30GB",
+    "price": 30000,
+    "location": "Singapore",
+    "duration": "bulan",
+    "isActive": true,
+    "description": "Untuk bot production high traffic"
+  },
+  {
+    "id": "S5",
+    "name": "Ultimate Panel",
+    "ram": "8GB",
+    "cpu": "300%",
+    "disk": "50GB",
+    "price": 40000,
+    "location": "Singapore",
+    "duration": "bulan",
+    "isActive": true,
+    "description": "Maximum performance untuk enterprise"
+  }
+]

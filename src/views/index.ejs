@@ -1,0 +1,171 @@
+<%- include('partials/header') %>
+
+<section class="relative min-h-[60vh] sm:min-h-[70vh] flex items-center overflow-hidden">
+  <div class="absolute inset-0 bg-gradient-to-b from-purple-900/20 via-transparent to-transparent"></div>
+  <div class="absolute top-10 left-5 sm:left-10 w-40 sm:w-72 h-40 sm:h-72 bg-purple-500/20 rounded-full blur-3xl"></div>
+  <div class="absolute bottom-10 right-5 sm:right-10 w-48 sm:w-96 h-48 sm:h-96 bg-pink-500/20 rounded-full blur-3xl"></div>
+  
+  <div class="max-w-7xl mx-auto px-4 py-12 sm:py-20 relative z-10 w-full">
+    <div class="text-center fade-in">
+      <h1 class="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6">
+        <span class="gradient-text">Baeci Market</span>
+      </h1>
+      <p class="text-base sm:text-lg md:text-xl text-gray-300 mb-6 sm:mb-8 max-w-2xl mx-auto px-2">
+        Marketplace premium untuk server panel Pterodactyl dan produk digital berkualitas dengan setup otomatis.
+      </p>
+      
+      <div class="flex flex-row gap-2 sm:gap-4 justify-center px-2">
+        <a href="/server" class="btn-primary px-4 sm:px-6 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold flex items-center justify-center gap-2">
+          <i class="fas fa-server text-sm"></i>
+          <span>Beli Server</span>
+        </a>
+        <a href="/products" class="btn-secondary px-4 sm:px-6 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold flex items-center justify-center gap-2">
+          <i class="fas fa-box text-sm"></i>
+          <span>Lihat Produk</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-6 sm:py-10 px-3 sm:px-4">
+  <div class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+      <div class="stat-card rounded-xl sm:rounded-2xl p-3 sm:p-5 text-center fade-in">
+        <div class="text-xl sm:text-2xl md:text-3xl font-bold gradient-text mb-1"><%= stats.serverCount %>+</div>
+        <div class="text-gray-400 text-xs">Server Aktif</div>
+      </div>
+      <div class="stat-card rounded-xl sm:rounded-2xl p-3 sm:p-5 text-center fade-in">
+        <div class="text-xl sm:text-2xl md:text-3xl font-bold gradient-text mb-1"><%= stats.uptime %></div>
+        <div class="text-gray-400 text-xs">Uptime</div>
+      </div>
+      <div class="stat-card rounded-xl sm:rounded-2xl p-3 sm:p-5 text-center fade-in">
+        <div class="text-xl sm:text-2xl md:text-3xl font-bold gradient-text mb-1"><%= stats.customerCount %>+</div>
+        <div class="text-gray-400 text-xs">Pelanggan</div>
+      </div>
+      <div class="stat-card rounded-xl sm:rounded-2xl p-3 sm:p-5 text-center fade-in">
+        <div class="text-xl sm:text-2xl md:text-3xl font-bold gradient-text mb-1">24/7</div>
+        <div class="text-gray-400 text-xs">Support</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<% if (servers && servers.length > 0) { %>
+<section class="py-6 sm:py-10 px-3 sm:px-4">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex items-center justify-between mb-4 sm:mb-6">
+      <h2 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2">
+        <i class="fas fa-server text-purple-400"></i>
+        <span>Server Panel</span>
+      </h2>
+      <a href="/server" class="text-purple-400 hover:text-purple-300 transition flex items-center gap-1 text-xs sm:text-sm">
+        Semua <i class="fas fa-arrow-right text-xs"></i>
+      </a>
+    </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+      <% servers.slice(0, 6).forEach((server, index) => { %>
+        <div class="glass-card rounded-xl sm:rounded-2xl p-4 sm:p-5 product-card fade-in">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <i class="fas fa-server text-sm sm:text-base"></i>
+            </div>
+            <span class="px-2 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] sm:text-xs font-medium">Tersedia</span>
+          </div>
+          
+          <h3 class="text-base sm:text-lg font-bold mb-1"><%= server.name %></h3>
+          <p class="text-gray-400 text-xs sm:text-sm mb-3 line-clamp-1"><%= server.description || 'Server panel Pterodactyl berkualitas' %></p>
+          
+          <div class="grid grid-cols-3 gap-1.5 sm:gap-2 mb-3">
+            <div class="text-center p-2 rounded-lg bg-white/5">
+              <div class="text-xs sm:text-sm font-semibold text-purple-400"><%= server.ram %></div>
+              <div class="text-[10px] text-gray-500">RAM</div>
+            </div>
+            <div class="text-center p-2 rounded-lg bg-white/5">
+              <div class="text-xs sm:text-sm font-semibold text-pink-400"><%= server.cpu %></div>
+              <div class="text-[10px] text-gray-500">CPU</div>
+            </div>
+            <div class="text-center p-2 rounded-lg bg-white/5">
+              <div class="text-xs sm:text-sm font-semibold text-orange-400"><%= server.disk %></div>
+              <div class="text-[10px] text-gray-500">Disk</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-between pt-2 border-t border-white/10">
+            <div>
+              <span class="text-lg sm:text-xl font-bold gradient-text">Rp <%= server.price.toLocaleString('id-ID') %></span>
+              <span class="text-gray-500 text-xs">/<%= server.duration || 'bulan' %></span>
+            </div>
+            <a href="/server/buy/<%= server.id %>" class="btn-primary px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium">
+              Beli
+            </a>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<% if (products && products.length > 0) { %>
+<section class="py-6 sm:py-10 px-3 sm:px-4">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex items-center justify-between mb-4 sm:mb-6">
+      <h2 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2">
+        <i class="fas fa-box text-pink-400"></i>
+        <span>Produk Digital</span>
+      </h2>
+      <a href="/products" class="text-purple-400 hover:text-purple-300 transition flex items-center gap-1 text-xs sm:text-sm">
+        Semua <i class="fas fa-arrow-right text-xs"></i>
+      </a>
+    </div>
+    
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
+      <% products.forEach((product, index) => { %>
+        <a href="/products/<%= product.id %>" class="glass-card rounded-xl sm:rounded-2xl overflow-hidden product-card fade-in">
+          <div class="aspect-square bg-gradient-to-br from-purple-900/50 to-pink-900/50 flex items-center justify-center">
+            <% if (product.image) { %>
+              <img src="<%= product.image %>" alt="<%= product.name %>" class="w-full h-full object-cover">
+            <% } else { %>
+              <i class="fas fa-box text-2xl sm:text-3xl text-purple-400"></i>
+            <% } %>
+          </div>
+          <div class="p-2.5 sm:p-3">
+            <div class="text-[10px] text-purple-400 mb-0.5"><%= product.category || 'Digital Product' %></div>
+            <h3 class="font-medium text-xs sm:text-sm mb-1 line-clamp-1"><%= product.name %></h3>
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-xs sm:text-sm text-orange-400">Rp <%= product.price.toLocaleString('id-ID') %></span>
+              <span class="text-[10px] text-gray-500">Stok: <%= product.stock %></span>
+            </div>
+          </div>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<section class="py-8 sm:py-12 px-3 sm:px-4">
+  <div class="max-w-4xl mx-auto">
+    <div class="glass-card rounded-xl sm:rounded-2xl p-5 sm:p-8 text-center">
+      <h2 class="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3">Mulai Sekarang</h2>
+      <p class="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6 max-w-xl mx-auto">
+        Daftar dan dapatkan akses ke berbagai server panel dan produk digital berkualitas dengan harga terjangkau.
+      </p>
+      <% if (!user) { %>
+        <a href="/auth/register" class="btn-primary px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
+          <i class="fas fa-rocket"></i>
+          Daftar Gratis
+        </a>
+      <% } else { %>
+        <a href="/server" class="btn-primary px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-sm font-semibold inline-flex items-center gap-2">
+          <i class="fas fa-server"></i>
+          Beli Server
+        </a>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

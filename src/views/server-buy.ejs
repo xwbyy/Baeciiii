@@ -1,0 +1,194 @@
+<%- include('partials/header') %>
+
+<section class="py-12 px-4">
+  <div class="max-w-2xl mx-auto">
+    <div class="absolute top-20 left-10 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-pink-500/20 rounded-full blur-3xl"></div>
+    
+    <div class="relative z-10 fade-in">
+      <a href="/server" class="inline-flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition">
+        <i class="fas fa-arrow-left"></i>
+        Kembali ke Daftar Server
+      </a>
+      
+      <div class="glass-card rounded-3xl p-8">
+        <div class="flex items-center gap-4 mb-6">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <i class="fas fa-server text-2xl"></i>
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold"><%= server.name %></h1>
+            <p class="text-gray-400">Server Panel Pterodactyl</p>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-3 mb-6">
+          <div class="text-center p-4 rounded-xl bg-white/5 border border-white/10">
+            <i class="fas fa-memory text-purple-400 mb-2 text-xl"></i>
+            <div class="text-lg font-bold text-purple-400"><%= server.ram %></div>
+            <div class="text-xs text-gray-500">RAM</div>
+          </div>
+          <div class="text-center p-4 rounded-xl bg-white/5 border border-white/10">
+            <i class="fas fa-microchip text-pink-400 mb-2 text-xl"></i>
+            <div class="text-lg font-bold text-pink-400"><%= server.cpu %></div>
+            <div class="text-xs text-gray-500">CPU</div>
+          </div>
+          <div class="text-center p-4 rounded-xl bg-white/5 border border-white/10">
+            <i class="fas fa-hdd text-orange-400 mb-2 text-xl"></i>
+            <div class="text-lg font-bold text-orange-400"><%= server.disk %></div>
+            <div class="text-xs text-gray-500">Disk</div>
+          </div>
+        </div>
+        
+        <form id="purchaseForm" class="space-y-6">
+          <input type="hidden" name="serverId" value="<%= server.id %>">
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">
+              <i class="fas fa-map-marker-alt text-purple-400 mr-2"></i>
+              Server Lokasi
+            </label>
+            <select name="location" class="w-full input-glass rounded-xl py-3 px-4 text-white">
+              <option value="singapore">Singapore</option>
+              <option value="indonesia">Indonesia</option>
+              <option value="germany">Germany</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">
+              <i class="fas fa-wallet text-purple-400 mr-2"></i>
+              Saldo Anda
+            </label>
+            <div class="input-glass rounded-xl py-3 px-4 text-white bg-white/5">
+              Rp <%= userBalance.toLocaleString('id-ID') %>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">
+              <i class="fas fa-calendar text-purple-400 mr-2"></i>
+              Pilih rentang hari:
+            </label>
+            <select name="duration" id="durationSelect" class="w-full input-glass rounded-xl py-3 px-4 text-white">
+              <option value="1month" data-multiplier="1">1 Bulan</option>
+              <option value="3month" data-multiplier="2.85">3 Bulan (Diskon 5%)</option>
+              <option value="6month" data-multiplier="5.4">6 Bulan (Diskon 10%)</option>
+              <option value="1year" data-multiplier="10.2">1 Tahun (Diskon 15%)</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">
+              <i class="fas fa-tag text-purple-400 mr-2"></i>
+              Total Harga Diskon:
+            </label>
+            <div id="totalPrice" class="input-glass rounded-xl py-3 px-4 text-2xl font-bold gradient-text bg-white/5">
+              Rp <%= server.price.toLocaleString('id-ID') %>
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">
+              <i class="fas fa-server text-purple-400 mr-2"></i>
+              Nama Server (Opsional)
+            </label>
+            <input type="text" name="serverName" 
+              class="w-full input-glass rounded-xl py-3 px-4 text-white placeholder-gray-500"
+              placeholder="Contoh: My Bot Server">
+          </div>
+          
+          <div>
+            <label class="block text-sm font-medium text-gray-300 mb-2">
+              <i class="fas fa-gift text-purple-400 mr-2"></i>
+              Kode Referral (Opsional)
+            </label>
+            <input type="text" name="referralCode"
+              class="w-full input-glass rounded-xl py-3 px-4 text-white placeholder-gray-500"
+              placeholder="Masukkan kode referral">
+          </div>
+          
+          <button type="submit" id="purchaseBtn" class="w-full btn-primary py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-3">
+            <i class="fas fa-shopping-cart"></i>
+            Beli Sekarang
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  const basePrice = <%= server.price %>;
+  const durationSelect = document.getElementById('durationSelect');
+  const totalPriceEl = document.getElementById('totalPrice');
+  const purchaseForm = document.getElementById('purchaseForm');
+  const purchaseBtn = document.getElementById('purchaseBtn');
+  
+  const discounts = {
+    '1month': 1,
+    '3month': 0.95,
+    '6month': 0.90,
+    '1year': 0.85
+  };
+  
+  const multipliers = {
+    '1month': 1,
+    '3month': 3,
+    '6month': 6,
+    '1year': 12
+  };
+  
+  durationSelect.addEventListener('change', updatePrice);
+  
+  function updatePrice() {
+    const duration = durationSelect.value;
+    const discount = discounts[duration];
+    const multiplier = multipliers[duration];
+    const total = Math.floor(basePrice * multiplier * discount);
+    totalPriceEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
+  }
+  
+  purchaseForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    purchaseBtn.disabled = true;
+    purchaseBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+    
+    const formData = new FormData(purchaseForm);
+    const data = Object.fromEntries(formData.entries());
+    
+    try {
+      const response = await fetch('/server/purchase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        if (result.serverCredentials) {
+          const creds = result.serverCredentials;
+          const credMsg = `Server berhasil dibuat!\n\nLogin URL: ${creds.loginUrl}\nUsername: ${creds.username}\nPassword: ${creds.password}\n\nSimpan data ini! Anda akan diarahkan ke halaman pesanan.`;
+          alert(credMsg);
+        } else {
+          showToast(result.message, 'success');
+        }
+        setTimeout(() => {
+          window.location.href = '/profile/orders';
+        }, 1500);
+      } else {
+        showToast(result.message, 'error');
+        purchaseBtn.disabled = false;
+        purchaseBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Beli Sekarang';
+      }
+    } catch (error) {
+      showToast('Terjadi kesalahan, silakan coba lagi', 'error');
+      purchaseBtn.disabled = false;
+      purchaseBtn.innerHTML = '<i class="fas fa-shopping-cart"></i> Beli Sekarang';
+    }
+  });
+</script>
+
+<%- include('partials/footer') %>

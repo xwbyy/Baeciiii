@@ -1,0 +1,35 @@
+[
+  {
+    "id": "P1",
+    "name": "Script Bot WhatsApp Premium",
+    "description": "Bot WhatsApp dengan fitur lengkap, anti banned, multi device support",
+    "price": 50000,
+    "stock": 100,
+    "category": "Script",
+    "image": "",
+    "isActive": true,
+    "createdAt": "2024-12-27T00:00:00.000Z"
+  },
+  {
+    "id": "P2",
+    "name": "Akun Netflix Premium 1 Bulan",
+    "description": "Akun Netflix Premium UHD 4K, garansi full 1 bulan",
+    "price": 25000,
+    "stock": 49,
+    "category": "Akun Premium",
+    "image": "",
+    "isActive": true,
+    "createdAt": "2024-12-27T00:00:00.000Z"
+  },
+  {
+    "id": "P3",
+    "name": "VPS Linux 2GB RAM",
+    "description": "VPS Linux dengan 2GB RAM, 40GB SSD, unlimited bandwidth",
+    "price": 75000,
+    "stock": 20,
+    "category": "VPS",
+    "image": "",
+    "isActive": true,
+    "createdAt": "2024-12-27T00:00:00.000Z"
+  }
+]

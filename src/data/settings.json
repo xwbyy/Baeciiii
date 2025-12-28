@@ -1,0 +1,18 @@
+{
+  "siteName": "Baeci Market",
+  "siteDescription": "Marketplace premium untuk server panel Pterodactyl dan produk digital",
+  "whatsapp": "",
+  "discord": "",
+  "panel": {
+    "domain": "https://crash.raflydev.my.id",
+    "apikey": "ptla_6X3Y792L3y4UXKY8SoaE53Ni9HkS7r3x69mesYC5Np2",
+    "capikey": "ptlc_loeEAwVifm62fnxmPeJ4Nj8uE5z6YFsB1bDo4hsoZ1H",
+    "egg": "15",
+    "nestid": "5",
+    "loc": "1"
+  },
+  "tokopay": {
+    "merchant_id": "M240701FIBRZ175",
+    "secret_key": "79f11be7847b1f018336776cef9c78d988530d5758527a032acd1f08ea429f28"
+  }
+}

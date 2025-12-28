@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title><%= typeof title !== 'undefined' ? title : 'Baeci Market' %></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'sans': ['Inter', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              50: '#faf5ff',
+              100: '#f3e8ff',
+              200: '#e9d5ff',
+              300: '#d8b4fe',
+              400: '#c084fc',
+              500: '#a855f7',
+              600: '#9333ea',
+              700: '#7c3aed',
+              800: '#6b21a8',
+              900: '#581c87',
+            },
+            dark: {
+              100: '#1a1a2e',
+              200: '#16162a',
+              300: '#0f0f1a',
+              400: '#0a0a12',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      font-family: 'Inter', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 50%, #16162a 100%);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .glass-strong {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    
+    .glass-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .gradient-text {
+      background: linear-gradient(135deg, #c084fc 0%, #f472b6 50%, #fb923c 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #9333ea 0%, #c026d3 100%);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #7c3aed 0%, #a21caf 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 40px rgba(147, 51, 234, 0.3);
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(192, 38, 211, 0.1) 100%);
+      backdrop-filter: blur(20px);
+    }
+    
+    .input-glass {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+    
+    .input-glass:focus {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(192, 132, 252, 0.5);
+      outline: none;
+      box-shadow: 0 0 20px rgba(192, 132, 252, 0.2);
+    }
+    
+    .nav-glass {
+      background: rgba(15, 15, 26, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    
+    .mobile-menu {
+      background: rgba(15, 15, 26, 0.98);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+    
+    .mobile-menu-overlay {
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .mobile-menu-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(147, 51, 234, 0.2);
+    }
+    
+    .product-card {
+      transition: all 0.3s ease;
+    }
+    
+    .bottom-nav {
+      background: rgba(15, 15, 26, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: rgba(147, 51, 234, 0.4);
+      border-radius: 3px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(147, 51, 234, 0.6);
+    }
+
+    @media (max-width: 640px) {
+      .hide-mobile { display: none !important; }
+    }
+  </style>
+</head>
+<body class="text-white antialiased">
+  <nav class="nav-glass fixed top-0 left-0 right-0 z-50 border-b border-white/10">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4">
+      <div class="flex items-center justify-between h-14 sm:h-16">
+        <a href="/" class="flex items-center gap-2 flex-shrink-0">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <i class="fas fa-store text-white text-sm"></i>
+          </div>
+          <span class="font-bold text-base sm:text-lg gradient-text">Baeci Market</span>
+        </a>
+        
+        <div class="hidden md:flex items-center gap-6">
+          <a href="/" class="text-gray-300 hover:text-white transition text-sm">Beranda</a>
+          <a href="/server" class="text-gray-300 hover:text-white transition text-sm">Server</a>
+          <a href="/products" class="text-gray-300 hover:text-white transition text-sm">Produk</a>
+          <% if (user) { %>
+            <a href="/profile/transactions" class="text-gray-300 hover:text-white transition text-sm">Transaksi</a>
+          <% } %>
+        </div>
+        
+        <div class="flex items-center gap-2 sm:gap-3">
+          <% if (user) { %>
+            <a href="/deposit" class="glass px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm flex items-center gap-1.5 hover:bg-white/10 transition">
+              <i class="fas fa-wallet text-purple-400 text-xs"></i>
+              <span class="font-medium">Rp <%= (user.balance || 0).toLocaleString('id-ID') %></span>
+            </a>
+            <a href="/profile" class="hide-mobile w-8 h-8 rounded-full glass flex items-center justify-center hover:bg-white/10 transition">
+              <i class="fas fa-user text-purple-400 text-xs"></i>
+            </a>
+            <% if (isAdmin) { %>
+              <a href="/admin" class="hide-mobile w-8 h-8 rounded-full bg-purple-600/30 flex items-center justify-center hover:bg-purple-600/50 transition">
+                <i class="fas fa-cog text-purple-300 text-xs"></i>
+              </a>
+            <% } %>
+          <% } else { %>
+            <a href="/auth/login" class="hide-mobile btn-secondary px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium">Masuk</a>
+            <a href="/auth/register" class="btn-primary px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium">Daftar</a>
+          <% } %>
+          <button id="mobileMenuBtn" class="md:hidden w-8 h-8 rounded-full glass flex items-center justify-center">
+            <i class="fas fa-bars text-sm"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+  
+  <div id="mobileMenuOverlay" class="mobile-menu-overlay fixed inset-0 z-40 md:hidden"></div>
+  
+  <div id="mobileMenu" class="mobile-menu fixed top-0 right-0 bottom-0 w-72 z-50 md:hidden">
+    <div class="flex flex-col h-full">
+      <div class="flex items-center justify-between p-4 border-b border-white/10">
+        <span class="font-semibold text-sm">Menu</span>
+        <button id="closeMobileMenu" class="w-8 h-8 rounded-full glass flex items-center justify-center">
+          <i class="fas fa-times text-sm"></i>
+        </button>
+      </div>
+      
+      <div class="flex-1 overflow-y-auto p-4 space-y-2">
+        <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+          <i class="fas fa-home text-purple-400 w-5 text-center"></i>
+          <span class="text-sm font-medium">Beranda</span>
+        </a>
+        <a href="/server" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+          <i class="fas fa-server text-purple-400 w-5 text-center"></i>
+          <span class="text-sm font-medium">Server Panel</span>
+        </a>
+        <a href="/products" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+          <i class="fas fa-box text-purple-400 w-5 text-center"></i>
+          <span class="text-sm font-medium">Produk Digital</span>
+        </a>
+        
+        <% if (user) { %>
+          <div class="border-t border-white/10 my-3 pt-3">
+            <div class="px-4 py-2 text-xs text-gray-500 uppercase tracking-wider">Akun Saya</div>
+          </div>
+          <a href="/deposit" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+            <i class="fas fa-wallet text-green-400 w-5 text-center"></i>
+            <span class="text-sm font-medium">Deposit Saldo</span>
+          </a>
+          <a href="/profile/transactions" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+            <i class="fas fa-receipt text-blue-400 w-5 text-center"></i>
+            <span class="text-sm font-medium">Riwayat Transaksi</span>
+          </a>
+          <a href="/profile/orders" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+            <i class="fas fa-shopping-bag text-orange-400 w-5 text-center"></i>
+            <span class="text-sm font-medium">Pesanan Saya</span>
+          </a>
+          <a href="/profile" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+            <i class="fas fa-user text-purple-400 w-5 text-center"></i>
+            <span class="text-sm font-medium">Profil</span>
+          </a>
+          <% if (isAdmin) { %>
+            <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 transition">
+              <i class="fas fa-cog text-purple-400 w-5 text-center"></i>
+              <span class="text-sm font-medium">Admin Dashboard</span>
+            </a>
+          <% } %>
+          <a href="/auth/logout" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-red-500/10 transition text-red-400">
+            <i class="fas fa-sign-out-alt w-5 text-center"></i>
+            <span class="text-sm font-medium">Keluar</span>
+          </a>
+        <% } else { %>
+          <div class="border-t border-white/10 my-3 pt-3"></div>
+          <a href="/auth/login" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+            <i class="fas fa-sign-in-alt text-purple-400 w-5 text-center"></i>
+            <span class="text-sm font-medium">Masuk</span>
+          </a>
+          <a href="/auth/register" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl btn-primary">
+            <i class="fas fa-user-plus"></i>
+            <span class="text-sm font-medium">Daftar Sekarang</span>
+          </a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  
+  <main class="pt-14 sm:pt-16 min-h-screen pb-16 md:pb-0">
+
+<script>
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
+  const closeMobileMenu = document.getElementById('closeMobileMenu');
+
+  function openMobileMenu() {
+    mobileMenu.classList.add('open');
+    mobileMenuOverlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeMobileMenuFn() {
+    mobileMenu.classList.remove('open');
+    mobileMenuOverlay.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  mobileMenuBtn?.addEventListener('click', openMobileMenu);
+  closeMobileMenu?.addEventListener('click', closeMobileMenuFn);
+  mobileMenuOverlay?.addEventListener('click', closeMobileMenuFn);
+</script>

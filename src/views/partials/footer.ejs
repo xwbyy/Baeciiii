@@ -1,0 +1,105 @@
+  </main>
+  
+  <% if (user) { %>
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10" style="background: rgba(15, 15, 26, 0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);">
+    <div class="flex items-center justify-around py-2">
+      <a href="/" class="flex flex-col items-center gap-1 py-2 px-4 text-gray-400 hover:text-white transition">
+        <i class="fas fa-home text-lg"></i>
+        <span class="text-xs">Beranda</span>
+      </a>
+      <a href="/server" class="flex flex-col items-center gap-1 py-2 px-4 text-gray-400 hover:text-white transition">
+        <i class="fas fa-server text-lg"></i>
+        <span class="text-xs">Server</span>
+      </a>
+      <a href="/deposit" class="relative -mt-6">
+        <div class="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+          <i class="fas fa-plus text-xl"></i>
+        </div>
+        <span class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-xs text-gray-400">Deposit</span>
+      </a>
+      <a href="/profile/transactions" class="flex flex-col items-center gap-1 py-2 px-4 text-gray-400 hover:text-white transition">
+        <i class="fas fa-receipt text-lg"></i>
+        <span class="text-xs">Transaksi</span>
+      </a>
+      <a href="/profile" class="flex flex-col items-center gap-1 py-2 px-4 text-gray-400 hover:text-white transition">
+        <i class="fas fa-user text-lg"></i>
+        <span class="text-xs">Profil</span>
+      </a>
+    </div>
+  </nav>
+  <div class="md:hidden h-20"></div>
+  <% } %>
+  
+  <footer class="glass border-t border-white/10 mt-12 <% if (user) { %>mb-20 md:mb-0<% } %>">
+    <div class="max-w-7xl mx-auto px-4 py-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+              <i class="fas fa-store text-white"></i>
+            </div>
+            <span class="font-bold text-xl gradient-text">Baeci Market</span>
+          </div>
+          <p class="text-gray-400 text-sm">Marketplace premium untuk server panel Pterodactyl dan produk digital berkualitas.</p>
+        </div>
+        
+        <div>
+          <h4 class="font-semibold mb-4">Layanan</h4>
+          <ul class="space-y-2 text-gray-400 text-sm">
+            <li><a href="/server" class="hover:text-white transition">Server Panel</a></li>
+            <li><a href="/products" class="hover:text-white transition">Produk Digital</a></li>
+            <li><a href="/deposit" class="hover:text-white transition">Top Up Saldo</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="font-semibold mb-4">Bantuan</h4>
+          <ul class="space-y-2 text-gray-400 text-sm">
+            <li><a href="#" class="hover:text-white transition">FAQ</a></li>
+            <li><a href="#" class="hover:text-white transition">Cara Pembelian</a></li>
+            <li><a href="#" class="hover:text-white transition">Hubungi Kami</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="font-semibold mb-4">Ikuti Kami</h4>
+          <div class="flex gap-3">
+            <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition">
+              <i class="fab fa-instagram"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition">
+              <i class="fab fa-discord"></i>
+            </a>
+            <a href="#" class="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition">
+              <i class="fab fa-whatsapp"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="border-t border-white/10 mt-8 pt-8 text-center text-gray-400 text-sm">
+        <p>&copy; 2024 Baeci Market. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <script>
+    function formatRupiah(amount) {
+      return 'Rp ' + parseInt(amount).toLocaleString('id-ID');
+    }
+    
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `fixed top-20 right-4 z-50 px-4 py-3 rounded-xl glass-strong text-white fade-in ${type === 'error' ? 'border-red-500/50' : 'border-green-500/50'} border text-sm`;
+      toast.innerHTML = `
+        <div class="flex items-center gap-2">
+          <i class="fas ${type === 'error' ? 'fa-times-circle text-red-400' : 'fa-check-circle text-green-400'}"></i>
+          <span>${message}</span>
+        </div>
+      `;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+  </script>
+</body>
+</html>
