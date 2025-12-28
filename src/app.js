@@ -23,9 +23,20 @@ app.use(session({
   }
 }));
 
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   res.locals.user = req.session.user || null;
   res.locals.isAdmin = req.session.user?.role === 'admin';
+  
+  if (req.session.user) {
+    try {
+      const db = require('./utils/sheetsDb');
+      res.locals.notifications = await db.getNotifications(req.session.user.id).catch(() => []);
+    } catch (e) {
+      res.locals.notifications = [];
+    }
+  } else {
+    res.locals.notifications = [];
+  }
   next();
 });
 
