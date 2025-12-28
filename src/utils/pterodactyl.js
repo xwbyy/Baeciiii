@@ -47,9 +47,11 @@ const createUser = async (username, firstName, lastName = 'User', rootAdmin = fa
   
   if (data.errors) {
     const errorMsg = data.errors[0]?.detail || JSON.stringify(data.errors);
+    console.error(`\x1b[31m[PANEL ERROR]\x1b[0m Gagal membuat user panel:`, errorMsg);
     throw new Error(errorMsg);
   }
 
+  console.log(`\x1b[32m[PANEL SUCCESS]\x1b[0m User \x1b[36m${username}\x1b[0m berhasil dibuat di Pterodactyl`);
   return { user: data.attributes, password, email };
 };
 
@@ -109,9 +111,11 @@ const createServer = async ({ name, userId, ram, disk, cpu }) => {
   
   if (result.errors) {
     const errorMsg = result.errors[0]?.detail || JSON.stringify(result.errors);
+    console.error(`\x1b[31m[PANEL ERROR]\x1b[0m Gagal membuat server panel:`, errorMsg);
     throw new Error(errorMsg);
   }
   
+  console.log(`\x1b[32m[PANEL SUCCESS]\x1b[0m Server \x1b[36m${name}\x1b[0m berhasil dibuat di Pterodactyl`);
   return result.attributes;
 };
 
@@ -178,6 +182,20 @@ const testConnection = async () => {
   }
 };
 
+const getServerStatus = async (serverId) => {
+  try {
+    const settings = await getSettings();
+    const response = await fetch(settings.domain + `/api/client/servers/${serverId}/resources`, {
+      method: 'GET',
+      headers: await clientHeaders()
+    });
+    const data = await response.json();
+    return data.attributes?.current_state || 'offline';
+  } catch (error) {
+    return 'offline';
+  }
+};
+
 module.exports = {
   createUser,
   createServer,
@@ -185,5 +203,6 @@ module.exports = {
   deleteServer,
   deleteUser,
   testConnection,
-  getSettings
+  getSettings,
+  getServerStatus
 };

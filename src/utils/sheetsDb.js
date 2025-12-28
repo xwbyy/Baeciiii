@@ -4,12 +4,14 @@ const credentials = require('../credentials.json');
 const SPREADSHEET_ID = credentials.google.spreadsheet_id;
 
 const SHEETS = {
-  users: { name: 'users', headers: ['id', 'username', 'email', 'password', 'phone', 'balance', 'role', 'createdAt'] },
-  products: { name: 'products', headers: ['id', 'name', 'description', 'price', 'stock', 'category', 'image', 'isActive', 'createdAt'] },
+  users: { name: 'users', headers: ['id', 'username', 'email', 'password', 'phone', 'balance', 'role', 'createdAt', 'referralCode', 'referredBy'] },
+  products: { name: 'products', headers: ['id', 'name', 'description', 'price', 'stock', 'category', 'image', 'isActive', 'createdAt', 'linkDown'] },
   servers: { name: 'servers', headers: ['id', 'name', 'ram', 'cpu', 'disk', 'price', 'location', 'duration', 'description', 'isActive'] },
   transactions: { name: 'transactions', headers: ['id', 'userId', 'type', 'amount', 'status', 'description', 'paymentMethod', 'refId', 'createdAt', 'productId'] },
   orders: { name: 'orders', headers: ['id', 'userId', 'username', 'productType', 'productId', 'productName', 'quantity', 'totalPrice', 'status', 'serverDetails', 'createdAt', 'completedAt'] },
-  settings: { name: 'settings', headers: ['key', 'value'] }
+  vouchers: { name: 'vouchers', headers: ['id', 'code', 'discountType', 'discountValue', 'minPurchase', 'maxUsage', 'usedCount', 'expiryDate', 'isActive'] },
+  settings: { name: 'settings', headers: ['key', 'value'] },
+  notifications: { name: 'notifications', headers: ['id', 'userId', 'title', 'message', 'isRead', 'type', 'createdAt'] }
 };
 
 let sheetsClient = null;
@@ -20,7 +22,9 @@ const cache = {
   servers: { data: null, timestamp: 0 },
   transactions: { data: null, timestamp: 0 },
   orders: { data: null, timestamp: 0 },
+  vouchers: { data: null, timestamp: 0 },
   settings: { data: null, timestamp: 0 },
+  notifications: { data: null, timestamp: 0 },
   sheetsChecked: false
 };
 
@@ -130,9 +134,10 @@ async function getSheetData(sheetName) {
     });
     
     cache[sheetName] = { data, timestamp: Date.now() };
+    console.log(`\x1b[32m[DB SUCCESS]\x1b[0m Berhasil memuat ${data.length} data dari sheet: \x1b[36m${sheetName}\x1b[0m`);
     return data;
   } catch (error) {
-    console.error(`Error reading ${sheetName}:`, error.message);
+    console.error(`\x1b[31m[DB ERROR]\x1b[0m Gagal membaca ${sheetName}:`, error.message);
     if (cache[sheetName].data) return cache[sheetName].data;
     return [];
   }
@@ -150,9 +155,10 @@ async function appendRow(sheetName, data, headers) {
       resource: { values: [row] }
     });
     invalidateCache(sheetName);
+    console.log(`\x1b[32m[DB INSERT]\x1b[0m Berhasil menambah baris baru di \x1b[36m${sheetName}\x1b[0m`);
     return true;
   } catch (error) {
-    console.error(`Error appending to ${sheetName}:`, error.message);
+    console.error(`\x1b[31m[DB ERROR]\x1b[0m Gagal menambah baris di ${sheetName}:`, error.message);
     return false;
   }
 }
@@ -169,9 +175,10 @@ async function updateRow(sheetName, rowIndex, data, headers) {
       resource: { values: [row] }
     });
     invalidateCache(sheetName);
+    console.log(`\x1b[32m[DB UPDATE]\x1b[0m Berhasil memperbarui baris ${rowIndex} di \x1b[36m${sheetName}\x1b[0m`);
     return true;
   } catch (error) {
-    console.error(`Error updating ${sheetName} row ${rowIndex}:`, error.message);
+    console.error(`\x1b[31m[DB ERROR]\x1b[0m Gagal memperbarui ${sheetName} baris ${rowIndex}:`, error.message);
     return false;
   }
 }
@@ -265,7 +272,8 @@ async function getProducts() {
     ...p,
     price: parseInt(p.price) || 0,
     stock: parseInt(p.stock) || 0,
-    isActive: p.isActive !== 'false'
+    isActive: p.isActive !== 'false',
+    downloadLink: p.linkDown || ''
   }));
 }
 
@@ -280,7 +288,8 @@ async function addProduct(product) {
     category: product.category || '',
     image: product.image || '',
     isActive: 'true',
-    createdAt: product.createdAt || new Date().toISOString()
+    createdAt: product.createdAt || new Date().toISOString(),
+    linkDown: product.downloadLink || ''
   };
   await appendRow('products', newProduct, SHEETS.products.headers);
   return id;
@@ -291,7 +300,12 @@ async function updateProduct(productId, updates) {
   const product = products.find(p => p.id === productId);
   if (!product) return false;
   
-  const updated = { ...product, ...updates, isActive: String(updates.isActive !== false) };
+  const updated = { 
+    ...product, 
+    ...updates, 
+    isActive: String(updates.isActive !== false),
+    linkDown: updates.downloadLink !== undefined ? updates.downloadLink : product.linkDown
+  };
   return await updateRow('products', product.rowIndex, updated, SHEETS.products.headers);
 }
 
@@ -432,6 +446,51 @@ async function updateOrder(orderId, updates) {
   return await updateRow('orders', order.rowIndex, updated, SHEETS.orders.headers);
 }
 
+async function getVouchers() {
+  await ensureAllSheetsExist();
+  const vouchers = await getSheetData('vouchers');
+  return vouchers.map(v => ({
+    ...v,
+    discountValue: parseInt(v.discountValue) || 0,
+    minPurchase: parseInt(v.minPurchase) || 0,
+    maxUsage: parseInt(v.maxUsage) || 0,
+    usedCount: parseInt(v.usedCount) || 0,
+    isActive: v.isActive !== 'false'
+  }));
+}
+
+async function addVoucher(voucher) {
+  const id = 'V' + Date.now();
+  const newVoucher = {
+    id,
+    code: voucher.code.toUpperCase(),
+    discountType: voucher.discountType || 'fixed',
+    discountValue: parseInt(voucher.discountValue),
+    minPurchase: parseInt(voucher.minPurchase) || 0,
+    maxUsage: parseInt(voucher.maxUsage) || 0,
+    usedCount: 0,
+    expiryDate: voucher.expiryDate || '',
+    isActive: 'true'
+  };
+  await appendRow('vouchers', newVoucher, SHEETS.vouchers.headers);
+  return id;
+}
+
+async function updateVoucher(voucherId, updates) {
+  const vouchers = await getVouchers();
+  const voucher = vouchers.find(v => v.id === voucherId);
+  if (!voucher) return false;
+  const updated = { ...voucher, ...updates, isActive: String(updates.isActive !== false) };
+  return await updateRow('vouchers', voucher.rowIndex, updated, SHEETS.vouchers.headers);
+}
+
+async function deleteVoucher(voucherId) {
+  const vouchers = await getVouchers();
+  const voucher = vouchers.find(v => v.id === voucherId);
+  if (!voucher) return false;
+  return await deleteRow('vouchers', voucher.rowIndex);
+}
+
 async function deleteOrder(orderId) {
   const orders = await getOrders();
   const order = orders.find(o => o.id === orderId);
@@ -478,6 +537,39 @@ async function updateSetting(key, value) {
   }
 }
 
+async function getNotifications(userId = null) {
+  await ensureAllSheetsExist();
+  const notifications = await getSheetData('notifications');
+  if (userId) {
+    return notifications.filter(n => n.userId === userId || n.userId === 'all');
+  }
+  return notifications;
+}
+
+async function addNotification(notification) {
+  const id = 'N' + Date.now();
+  const newNotification = {
+    id,
+    userId: notification.userId || 'all',
+    title: notification.title,
+    message: notification.message,
+    isRead: 'false',
+    type: notification.type || 'info',
+    createdAt: new Date().toISOString()
+  };
+  await appendRow('notifications', newNotification, SHEETS.notifications.headers);
+  return id;
+}
+
+async function markNotificationRead(notificationId) {
+  const notifications = await getNotifications();
+  const notification = notifications.find(n => n.id === notificationId);
+  if (!notification) return false;
+  
+  const updated = { ...notification, isRead: 'true' };
+  return await updateRow('notifications', notification.rowIndex, updated, SHEETS.notifications.headers);
+}
+
 module.exports = {
   getUsers,
   addUser,
@@ -500,8 +592,15 @@ module.exports = {
   addOrder,
   updateOrder,
   deleteOrder,
+  getVouchers,
+  addVoucher,
+  updateVoucher,
+  deleteVoucher,
   getSettings,
   updateSetting,
+  getNotifications,
+  addNotification,
+  markNotificationRead,
   initializeSheets,
   invalidateCache
 };
