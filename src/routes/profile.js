@@ -13,18 +13,31 @@ router.get('/', isAuthenticated, async (req, res) => {
       req.session.user.balance = user.balance;
     }
 
+    const notifications = await db.getNotifications(req.session.user.id).catch(() => []);
+
     res.render('profile', {
       title: 'Profil - Baeci Market',
       error: null,
-      success: null
+      success: null,
+      notifications: notifications.slice(-10).reverse()
     });
   } catch (error) {
     console.error('Profile Error:', error);
     res.render('profile', {
       title: 'Profil - Baeci Market',
       error: 'Gagal memuat profil',
-      success: null
+      success: null,
+      notifications: []
     });
+  }
+});
+
+router.post('/notifications/read/:id', isAuthenticated, async (req, res) => {
+  try {
+    await db.markNotificationRead(req.params.id);
+    res.json({ success: true });
+  } catch (error) {
+    res.json({ success: false });
   }
 });
 
@@ -51,9 +64,14 @@ router.get('/transactions', isAuthenticated, async (req, res) => {
 router.get('/orders', isAuthenticated, async (req, res) => {
   try {
     const orders = await db.getOrders();
+    const products = await db.getProducts();
     const userOrders = orders
       .filter(o => o.userId === req.session.user.id)
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .map(order => ({
+        ...order,
+        product: order.productType === 'product' ? products.find(p => p.id === order.productId) : null
+      }));
 
     res.render('orders', {
       title: 'Pesanan Saya - Baeci Market',

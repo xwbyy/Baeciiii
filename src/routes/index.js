@@ -34,4 +34,20 @@ router.get('/', async (req, res) => {
   }
 });
 
+router.get('/faq', (req, res) => {
+  res.render('faq', { title: 'FAQ - Baeci Market' });
+});
+
+router.get('/cara-beli', (req, res) => {
+  res.render('cara-beli', { title: 'Cara Pembelian - Baeci Market' });
+});
+
+router.get('/tutorial', (req, res) => {
+  res.render('tutorial', { title: 'Tutorial - Baeci Market' });
+});
+
+router.get('/contact', (req, res) => {
+  res.render('contact', { title: 'Hubungi Kami - Baeci Market' });
+});
+
 module.exports = router;

@@ -74,11 +74,37 @@ router.post('/purchase', isAuthenticated, async (req, res) => {
     };
 
     const multiplier = durationMultiplier[duration] || 1;
-    let totalPrice = server.price * multiplier;
+    let totalPriceBase = server.price * multiplier;
 
-    if (duration === '3month') totalPrice = Math.floor(totalPrice * 0.95);
-    if (duration === '6month') totalPrice = Math.floor(totalPrice * 0.90);
-    if (duration === '1year') totalPrice = Math.floor(totalPrice * 0.85);
+    if (duration === '3month') totalPriceBase = Math.floor(totalPriceBase * 0.95);
+    if (duration === '6month') totalPriceBase = Math.floor(totalPriceBase * 0.90);
+    if (duration === '1year') totalPriceBase = Math.floor(totalPriceBase * 0.85);
+
+    let totalPrice = totalPriceBase;
+    let voucher = null;
+    const { voucherCode } = req.body;
+
+    if (voucherCode) {
+      const vouchers = await db.getVouchers();
+      voucher = vouchers.find(v => v.code === voucherCode.toUpperCase() && v.isActive);
+      
+      if (voucher) {
+        if (totalPriceBase < voucher.minPurchase) {
+          return res.json({ success: false, message: `Minimal pembelian Rp ${voucher.minPurchase.toLocaleString()} untuk voucher ini` });
+        }
+        if (voucher.usedCount >= voucher.maxUsage) {
+          return res.json({ success: false, message: 'Voucher sudah habis digunakan' });
+        }
+        
+        const discount = voucher.discountType === 'percent' 
+          ? Math.floor(totalPriceBase * (voucher.discountValue / 100))
+          : voucher.discountValue;
+        
+        totalPrice = Math.max(0, totalPriceBase - discount);
+      } else {
+        return res.json({ success: false, message: 'Voucher tidak valid atau sudah tidak aktif' });
+      }
+    }
 
     if (user.balance < totalPrice) {
       return res.json({ 
@@ -126,13 +152,19 @@ router.post('/purchase', isAuthenticated, async (req, res) => {
         disk: diskValue,
         cpu: cpuValue
       });
-      console.log('Server created:', panelServer.id);
+      console.log('Server created successfully:', panelServer.id);
     } catch (error) {
-      console.error('Error creating server:', error);
-      await pterodactyl.deleteUser(panelUser.id).catch(() => {});
+      console.error('Error creating server on Pterodactyl:', error);
+      // Try to cleanup the user if server creation fails
+      try {
+        await pterodactyl.deleteUser(panelUser.id);
+        console.log('Cleaned up panel user after server creation failure');
+      } catch (cleanupError) {
+        console.error('Failed to cleanup panel user:', cleanupError);
+      }
       return res.json({ 
         success: false, 
-        message: 'Gagal membuat server: ' + error.message 
+        message: 'Gagal membuat server di panel: ' + (error.message || 'Unknown error')
       });
     }
 

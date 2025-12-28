@@ -46,7 +46,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/buy/:id', isAuthenticated, async (req, res) => {
   try {
-    const { quantity } = req.body;
+    const { quantity, voucherCode } = req.body;
     const qty = parseInt(quantity) || 1;
 
     const products = await db.getProducts();
@@ -64,14 +64,38 @@ router.post('/buy/:id', isAuthenticated, async (req, res) => {
       return res.json({ success: false, message: 'Stok tidak mencukupi' });
     }
 
+    const totalPriceBase = product.price * qty;
+    let totalPrice = totalPriceBase;
+    let voucher = null;
+
+    if (voucherCode) {
+      const vouchers = await db.getVouchers();
+      voucher = vouchers.find(v => v.code === voucherCode.toUpperCase() && v.isActive);
+      
+      if (voucher) {
+        if (totalPriceBase < voucher.minPurchase) {
+          return res.json({ success: false, message: `Minimal pembelian Rp ${voucher.minPurchase.toLocaleString()} untuk voucher ini` });
+        }
+        if (voucher.usedCount >= voucher.maxUsage) {
+          return res.json({ success: false, message: 'Voucher sudah habis digunakan' });
+        }
+        
+        const discount = voucher.discountType === 'percent' 
+          ? Math.floor(totalPriceBase * (voucher.discountValue / 100))
+          : voucher.discountValue;
+        
+        totalPrice = Math.max(0, totalPriceBase - discount);
+      } else {
+        return res.json({ success: false, message: 'Voucher tidak valid atau sudah tidak aktif' });
+      }
+    }
+
     const users = await db.getUsers();
     const user = users.find(u => u.id === req.session.user.id);
     
     if (!user) {
       return res.json({ success: false, message: 'User tidak ditemukan' });
     }
-
-    const totalPrice = product.price * qty;
 
     if (user.balance < totalPrice) {
       return res.json({ 
@@ -82,6 +106,10 @@ router.post('/buy/:id', isAuthenticated, async (req, res) => {
 
     const newBalance = user.balance - totalPrice;
     await db.updateUserBalance(user.id, newBalance);
+
+    if (voucher) {
+      await db.updateVoucher(voucher.id, { usedCount: voucher.usedCount + 1 });
+    }
 
     const newStock = product.stock - qty;
     await db.updateProduct(product.id, { stock: newStock });
@@ -102,7 +130,7 @@ router.post('/buy/:id', isAuthenticated, async (req, res) => {
       type: 'purchase',
       amount: -totalPrice,
       status: 'completed',
-      description: `Pembelian ${product.name} x${qty}`,
+      description: `Pembelian ${product.name} x${qty}${voucher ? ' (Voucher: ' + voucher.code + ')' : ''}`,
       productId: orderId
     });
 

@@ -36,13 +36,14 @@ const upload = multer({
 
 router.get('/', isAdmin, async (req, res) => {
   try {
-    const [users, products, servers, transactions, orders, settings] = await Promise.all([
+    const [users, products, servers, transactions, orders, settings, vouchers] = await Promise.all([
       db.getUsers().catch(() => []),
       db.getProducts().catch(() => []),
       db.getServers().catch(() => []),
       db.getTransactions().catch(() => []),
       db.getOrders().catch(() => []),
-      db.getSettings().catch(() => ({}))
+      db.getSettings().catch(() => ({})),
+      db.getVouchers().catch(() => [])
     ]);
 
     const stats = {
@@ -51,6 +52,7 @@ router.get('/', isAdmin, async (req, res) => {
       totalServers: servers.length,
       totalTransactions: transactions.length,
       totalOrders: orders.length,
+      totalVouchers: vouchers.length,
       totalRevenue: transactions
         .filter(t => t.type === 'purchase' && t.status === 'completed')
         .reduce((sum, t) => sum + Math.abs(t.amount), 0),
@@ -67,7 +69,8 @@ router.get('/', isAdmin, async (req, res) => {
       servers,
       transactions: transactions.slice(-50).reverse(),
       orders: orders.slice(-50).reverse(),
-      settings
+      settings,
+      vouchers
     });
   } catch (error) {
     console.error('Admin Dashboard Error:', error);
@@ -86,7 +89,8 @@ router.get('/', isAdmin, async (req, res) => {
 
 router.post('/products/add-json', isAdmin, async (req, res) => {
   try {
-    const { name, description, price, stock, category, image } = req.body;
+    const { name, description, price, stock, category, image, downloadLink } = req.body;
+    console.log('Adding product via JSON:', { name, downloadLink });
 
     await db.addProduct({
       name,
@@ -94,7 +98,8 @@ router.post('/products/add-json', isAdmin, async (req, res) => {
       price: parseInt(price),
       stock: parseInt(stock),
       category,
-      image: image || ''
+      image: image || '',
+      downloadLink: downloadLink || ''
     });
 
     res.json({ success: true, message: 'Produk berhasil ditambahkan' });
@@ -106,7 +111,8 @@ router.post('/products/add-json', isAdmin, async (req, res) => {
 
 router.post('/products/add', isAdmin, upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, stock, category } = req.body;
+    const { name, description, price, stock, category, downloadLink } = req.body;
+    console.log('Adding product via Form:', { name, downloadLink });
     const image = req.file ? `/uploads/${req.file.filename}` : '';
 
     await db.addProduct({
@@ -115,7 +121,8 @@ router.post('/products/add', isAdmin, upload.single('image'), async (req, res) =
       price: parseInt(price),
       stock: parseInt(stock),
       category,
-      image
+      image,
+      downloadLink: downloadLink || ''
     });
 
     res.json({ success: true, message: 'Produk berhasil ditambahkan' });
@@ -127,7 +134,7 @@ router.post('/products/add', isAdmin, upload.single('image'), async (req, res) =
 
 router.post('/products/update/:id', isAdmin, upload.single('image'), async (req, res) => {
   try {
-    const { name, description, price, stock, category, isActive } = req.body;
+    const { name, description, price, stock, category, isActive, downloadLink } = req.body;
     const products = await db.getProducts();
     const product = products.find(p => p.id === req.params.id);
 
@@ -144,6 +151,7 @@ router.post('/products/update/:id', isAdmin, upload.single('image'), async (req,
       stock: parseInt(stock) || product.stock,
       category: category || product.category,
       image,
+      downloadLink: downloadLink || product.downloadLink || '',
       isActive: isActive === 'true'
     });
 
@@ -464,6 +472,44 @@ router.post('/api/tokopay', isAdmin, async (req, res) => {
   } catch (error) {
     console.error('Update TokoPay Settings Error:', error);
     res.json({ success: false, message: 'Gagal menyimpan konfigurasi TokoPay' });
+  }
+});
+
+router.post('/vouchers/add', isAdmin, async (req, res) => {
+  try {
+    await db.addVoucher(req.body);
+    res.json({ success: true, message: 'Voucher berhasil ditambahkan' });
+  } catch (error) {
+    console.error('Add Voucher Error:', error);
+    res.json({ success: false, message: 'Gagal menambahkan voucher' });
+  }
+});
+
+router.delete('/vouchers/:id', isAdmin, async (req, res) => {
+  try {
+    await db.deleteVoucher(req.params.id);
+    res.json({ success: true, message: 'Voucher berhasil dihapus' });
+  } catch (error) {
+    console.error('Delete Voucher Error:', error);
+    res.json({ success: false, message: 'Gagal menghapus voucher' });
+  }
+});
+
+router.post('/broadcast', isAdmin, async (req, res) => {
+  try {
+    const { title, message, type, userId } = req.body;
+    
+    await db.addNotification({
+      userId: userId || 'all',
+      title,
+      message,
+      type: type || 'info'
+    });
+
+    res.json({ success: true, message: 'Broadcast berhasil dikirim' });
+  } catch (error) {
+    console.error('Broadcast Error:', error);
+    res.json({ success: false, message: 'Gagal mengirim broadcast' });
   }
 });
 

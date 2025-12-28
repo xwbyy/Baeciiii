@@ -98,14 +98,33 @@ router.post('/register', isGuest, async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const referralCode = Math.random().toString(36).substring(2, 8).toUpperCase();
     
     const userId = await db.addUser({
       username,
       email,
       password: hashedPassword,
       role: 'user',
-      phone
+      phone,
+      referralCode
     });
+
+    if (req.body.referredBy) {
+      const users = await db.getUsers();
+      const referrer = users.find(u => u.referralCode === req.body.referredBy.toUpperCase());
+      if (referrer) {
+        await db.updateUser(userId, { referredBy: referrer.id });
+        // Bonus 5k untuk yang ngajak
+        await db.updateUserBalance(referrer.id, referrer.balance + 5000);
+        await db.addTransaction({
+          userId: referrer.id,
+          type: 'referral',
+          amount: 5000,
+          status: 'completed',
+          description: `Bonus referral dari @${username}`
+        });
+      }
+    }
 
     req.session.user = {
       id: userId,
