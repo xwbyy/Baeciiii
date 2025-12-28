@@ -161,3 +161,4 @@ Google Sheets database (persistent cloud storage):
 - Each sheet has proper headers and data validation
 - Uses service account for authentication
 - Works on both Replit and Vercel deployment
+- Local JSON storage is no longer used.
