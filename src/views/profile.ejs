@@ -36,6 +36,28 @@
       
       <div class="glass-card rounded-3xl p-6 mb-6">
         <h3 class="font-semibold mb-4 flex items-center gap-2">
+          <i class="fas fa-bell text-purple-400"></i>
+          Notifikasi
+        </h3>
+        <div class="space-y-3">
+          <% if (typeof notifications !== 'undefined' && notifications.length > 0) { %>
+            <% notifications.forEach(n => { %>
+              <div class="p-4 rounded-xl glass border-l-4 <%= n.type === 'success' ? 'border-green-500' : n.type === 'danger' ? 'border-red-500' : n.type === 'warning' ? 'border-yellow-500' : 'border-blue-500' %> <%= n.isRead === 'true' ? 'opacity-60' : '' %>" onclick="markRead('<%= n.id %>')">
+                <div class="flex justify-between items-start mb-1">
+                  <h4 class="font-bold text-sm"><%= n.title %></h4>
+                  <span class="text-[10px] text-gray-500"><%= new Date(n.createdAt).toLocaleDateString('id-ID') %></span>
+                </div>
+                <p class="text-xs text-gray-400"><%= n.message %></p>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <div class="text-center text-gray-500 text-sm py-4">Tidak ada notifikasi</div>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="glass-card rounded-3xl p-6 mb-6">
+        <h3 class="font-semibold mb-4 flex items-center gap-2">
           <i class="fas fa-link text-purple-400"></i>
           Menu Cepat
         </h3>
@@ -125,6 +147,13 @@
       showToast('Terjadi kesalahan', 'error');
     }
   });
+
+  async function markRead(id) {
+    try {
+      await fetch('/profile/notifications/read/' + id, { method: 'POST' });
+      location.reload();
+    } catch (e) {}
+  }
 </script>
 
 <%- include('partials/footer') %>

@@ -54,6 +54,14 @@
                     </button>
                   </div>
                 </div>
+
+                <div class="mt-4">
+                  <label class="block text-sm font-medium text-gray-300 mb-2">Voucher Promo (Opsional)</label>
+                  <div class="flex gap-2">
+                    <input type="text" id="voucherCode" placeholder="Masukkan kode voucher" 
+                      class="flex-1 input-glass rounded-xl py-2 px-4 text-white uppercase text-sm">
+                  </div>
+                </div>
                 
                 <div class="border-t border-white/10 pt-4">
                   <div class="flex justify-between items-center mb-4">
@@ -123,12 +131,13 @@
     buyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
     
     const quantity = quantityInput.value;
+    const voucherCode = document.getElementById('voucherCode').value;
     
     try {
       const response = await fetch('/products/buy/<%= product.id %>', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quantity })
+        body: JSON.stringify({ quantity, voucherCode })
       });
       
       const result = await response.json();

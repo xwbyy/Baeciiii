@@ -74,6 +74,12 @@
         <button onclick="showTab('api')" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap" data-tab="api">
           <i class="fas fa-key mr-1 sm:mr-2"></i>API
         </button>
+        <button onclick="showTab('vouchers')" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap" data-tab="vouchers">
+          <i class="fas fa-ticket-alt mr-1 sm:mr-2"></i>Voucher
+        </button>
+        <button onclick="showTab('broadcast')" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap" data-tab="broadcast">
+          <i class="fas fa-bullhorn mr-1 sm:mr-2"></i>Broadcast
+        </button>
       </div>
     </div>
 
@@ -133,6 +139,7 @@
             <input type="number" name="stock" placeholder="Stok" required class="input-glass rounded-lg py-2 px-3 text-sm">
             <input type="text" name="category" placeholder="Kategori" class="input-glass rounded-lg py-2 px-3 text-sm col-span-2">
             <textarea name="description" placeholder="Deskripsi" rows="2" class="input-glass rounded-lg py-2 px-3 text-sm col-span-2"></textarea>
+            <input type="url" name="downloadLink" placeholder="Link Download (MediaFire, Drive, dll)" class="input-glass rounded-lg py-2 px-3 text-sm col-span-2">
             <div class="col-span-2">
               <label class="block text-xs text-gray-400 mb-1">Gambar (URL atau Upload)</label>
               <input type="text" name="imageUrl" placeholder="https://example.com/image.jpg" class="input-glass rounded-lg py-2 px-3 text-sm w-full mb-2">
@@ -357,6 +364,83 @@
       </div>
     </div>
 
+    <div id="vouchersTab" class="tab-content hidden">
+      <div class="glass-card rounded-xl p-3 sm:p-5 mb-4">
+        <h3 class="font-semibold text-sm mb-3">Tambah Voucher Baru</h3>
+        <form id="addVoucherForm" class="space-y-3">
+          <div class="grid grid-cols-2 gap-2 sm:gap-3">
+            <input type="text" name="code" placeholder="KODE VOUCHER" required class="input-glass rounded-lg py-2 px-3 text-sm uppercase">
+            <select name="discountType" class="input-glass rounded-lg py-2 px-3 text-sm">
+              <option value="fixed">Potongan Tetap (Rp)</option>
+              <option value="percent">Persentase (%)</option>
+            </select>
+            <input type="number" name="discountValue" placeholder="Nilai Potongan" required class="input-glass rounded-lg py-2 px-3 text-sm">
+            <input type="number" name="minPurchase" placeholder="Minimal Pembelian" required class="input-glass rounded-lg py-2 px-3 text-sm">
+            <input type="number" name="maxUsage" placeholder="Maksimal Penggunaan" required class="input-glass rounded-lg py-2 px-3 text-sm">
+            <input type="date" name="expiryDate" class="input-glass rounded-lg py-2 px-3 text-sm">
+          </div>
+          <button type="submit" class="w-full btn-primary py-2 rounded-lg text-sm font-medium">Tambah Voucher</button>
+        </form>
+      </div>
+      <div class="glass-card rounded-xl p-3 sm:p-5">
+        <h3 class="font-semibold text-sm mb-3">Daftar Voucher</h3>
+        <div class="space-y-2">
+          <% vouchers.forEach(v => { %>
+            <div class="glass rounded-lg p-3 flex justify-between items-center">
+              <div>
+                <div class="font-bold text-sm"><%= v.code %></div>
+                <div class="text-[10px] text-gray-400">
+                  Potongan: <%= v.discountType === 'percent' ? v.discountValue + '%' : 'Rp ' + v.discountValue.toLocaleString() %>
+                  | Min: Rp <%= v.minPurchase.toLocaleString() %>
+                </div>
+                <div class="text-[10px] text-gray-500">Terpakai: <%= v.usedCount %> / <%= v.maxUsage %></div>
+              </div>
+              <button onclick="deleteVoucher('<%= v.id %>')" class="w-7 h-7 rounded-lg bg-red-500/20 text-red-400 flex items-center justify-center">
+                <i class="fas fa-trash text-xs"></i>
+              </button>
+            </div>
+          <% }) %>
+        </div>
+      </div>
+    </div>
+
+    <div id="broadcastTab" class="tab-content hidden">
+      <div class="glass-card rounded-xl p-3 sm:p-5 mb-4">
+        <h3 class="font-semibold text-sm mb-3">Kirim Broadcast</h3>
+        <form id="broadcastForm" class="space-y-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Target User</label>
+            <select name="userId" class="w-full input-glass rounded-lg py-2 px-3 text-sm">
+              <option value="all">Semua User</option>
+              <% users.forEach(u => { %>
+                <option value="<%= u.id %>"><%= u.username %> (<%= u.email %>)</option>
+              <% }) %>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Tipe Notifikasi</label>
+            <select name="type" class="w-full input-glass rounded-lg py-2 px-3 text-sm">
+              <option value="info">Informasi (Biru)</option>
+              <option value="success">Sukses (Hijau)</option>
+              <option value="warning">Peringatan (Kuning)</option>
+              <option value="danger">Penting (Merah)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Judul</label>
+            <input type="text" name="title" required placeholder="Contoh: Maintenance Selesai" class="w-full input-glass rounded-lg py-2 px-3 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Pesan</label>
+            <textarea name="message" required rows="3" placeholder="Isi pesan broadcast..." class="w-full input-glass rounded-lg py-2 px-3 text-sm"></textarea>
+          </div>
+          <button type="submit" class="w-full btn-primary py-2 rounded-lg text-sm font-medium">
+            <i class="fas fa-paper-plane mr-2"></i>Kirim Broadcast
+          </button>
+        </form>
+      </div>
+    </div>
+    
     <div id="apiTab" class="tab-content hidden">
       <div class="space-y-4">
         <div class="glass-card rounded-xl p-3 sm:p-5">
@@ -612,6 +696,10 @@
                 <textarea name="description" rows="2" class="w-full input-glass rounded-lg py-2 px-3 text-sm">${p.description || ''}</textarea>
               </div>
               <div>
+                <label class="block text-xs text-gray-400 mb-1">Link Download</label>
+                <input type="url" name="downloadLink" value="${p.downloadLink || ''}" class="w-full input-glass rounded-lg py-2 px-3 text-sm" placeholder="https://mediafire.com/...">
+              </div>
+              <div>
                 <label class="block text-xs text-gray-400 mb-1">URL Gambar</label>
                 <input type="text" name="imageUrl" value="${p.image || ''}" class="w-full input-glass rounded-lg py-2 px-3 text-sm" placeholder="https://...">
               </div>
@@ -634,6 +722,7 @@
       stock: form.stock.value,
       category: form.category.value,
       description: form.description.value,
+      downloadLink: form.downloadLink.value,
       image: form.imageUrl.value,
       isActive: 'true'
     };
@@ -749,6 +838,23 @@
     apiCall(`/admin/transactions/${transactionId}`, 'DELETE').then(r => { alert(r.message); if(r.success) location.reload(); });
   }
 
+  const addVoucherForm = document.getElementById('addVoucherForm');
+  addVoucherForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(addVoucherForm);
+    const data = Object.fromEntries(formData.entries());
+    const r = await apiCall('/admin/vouchers/add', 'POST', data);
+    alert(r.message);
+    if (r.success) location.reload();
+  });
+
+  async function deleteVoucher(id) {
+    if (!confirm('Hapus voucher ini?')) return;
+    const r = await apiCall(`/admin/vouchers/${id}`, 'DELETE');
+    alert(r.message);
+    if (r.success) location.reload();
+  }
+
   document.getElementById('addProductForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = e.target;
@@ -762,6 +868,7 @@
         stock: form.stock.value,
         category: form.category.value,
         description: form.description.value,
+        downloadLink: form.downloadLink.value,
         image: imageUrl
       };
       const r = await apiCall('/admin/products/add-json', 'POST', data);
@@ -831,6 +938,29 @@
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-plug mr-1"></i>Test Koneksi';
   }
+
+    // Broadcast Form
+    const broadcastForm = document.getElementById('broadcastForm');
+    if (broadcastForm) {
+      broadcastForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(broadcastForm);
+        const data = Object.fromEntries(formData.entries());
+        
+        try {
+          const res = await fetch('/admin/broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          const result = await res.json();
+          alert(result.message);
+          if (result.success) broadcastForm.reset();
+        } catch (err) {
+          alert('Gagal mengirim broadcast');
+        }
+      });
+    }
 
   document.getElementById('modal').addEventListener('click', (e) => {
     if (e.target.id === 'modal') closeModal();
