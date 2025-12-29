@@ -162,3 +162,10 @@ Google Sheets database (persistent cloud storage):
 - Uses service account for authentication
 - Works on both Replit and Vercel deployment
 - Local JSON storage is no longer used.
+
+## Recent Changes
+- 2025-12-29: Updated server specs mapping and fixed price display.
+  - Implemented automatic RAM/Disk/CPU detection based on plan name (1GB-10GB).
+  - Fixed 'Total Harga' display bug in purchase page.
+  - Removed all legacy JSON data files; app now fully relies on Google Sheets.
+  - Improved admin control over pricing and specifications via spreadsheet.

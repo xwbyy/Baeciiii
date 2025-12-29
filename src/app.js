@@ -1,10 +1,19 @@
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const credentials = require('./credentials.json');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Security: Rate limiting to prevent brute force
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per window
+  message: 'Terlalu banyak permintaan dari IP ini, silakan coba lagi nanti.'
+});
+app.use('/auth/', limiter);
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -47,6 +56,10 @@ const productRoutes = require('./routes/products');
 const depositRoutes = require('./routes/deposit');
 const adminRoutes = require('./routes/admin');
 const profileRoutes = require('./routes/profile');
+const apiRoutes = require('./routes/api');
+const { initCron } = require('./utils/cron');
+
+initCron();
 
 app.use('/', indexRoutes);
 app.use('/auth', authRoutes);
@@ -55,6 +68,7 @@ app.use('/products', productRoutes);
 app.use('/deposit', depositRoutes);
 app.use('/admin', adminRoutes);
 app.use('/profile', profileRoutes);
+app.use('/api', apiRoutes);
 
 app.use((req, res) => {
   res.status(404).render('404', { title: 'Halaman Tidak Ditemukan' });

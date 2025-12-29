@@ -50,7 +50,7 @@ router.get('/buy/:id', isAuthenticated, async (req, res) => {
 
 router.post('/purchase', isAuthenticated, async (req, res) => {
   try {
-    const { serverId, serverName, duration, referralCode } = req.body;
+    const { serverId, serverName, duration, referralCode, location } = req.body;
     
     const servers = await db.getServers();
     const server = servers.find(s => s.id === serverId);
@@ -67,6 +67,10 @@ router.post('/purchase', isAuthenticated, async (req, res) => {
     }
 
     const durationMultiplier = {
+      '1day': 0.05,
+      '3day': 0.15,
+      '7day': 0.35,
+      '15day': 0.65,
       '1month': 1,
       '3month': 3,
       '6month': 6,
@@ -81,90 +85,72 @@ router.post('/purchase', isAuthenticated, async (req, res) => {
     if (duration === '1year') totalPriceBase = Math.floor(totalPriceBase * 0.85);
 
     let totalPrice = totalPriceBase;
-    let voucher = null;
-    const { voucherCode } = req.body;
 
-    if (voucherCode) {
-      const vouchers = await db.getVouchers();
-      voucher = vouchers.find(v => v.code === voucherCode.toUpperCase() && v.isActive);
+    // Get Ram, Disk, CPU from name if not set in DB - Muuclin Format
+    let ram = server.ram;
+    let disk = server.disk;
+    let cpu = server.cpu;
+
+    if (!ram || !disk || !cpu) {
+      const plan = server.name.toLowerCase();
+      if (plan.includes('1gb')) { ram = 1000; disk = 1000; cpu = 40; }
+      else if (plan.includes('2gb')) { ram = 2000; disk = 1000; cpu = 60; }
+      else if (plan.includes('3gb')) { ram = 3000; disk = 2000; cpu = 80; }
+      else if (plan.includes('4gb')) { ram = 4000; disk = 2000; cpu = 100; }
+      else if (plan.includes('5gb')) { ram = 5000; disk = 3000; cpu = 120; }
+      else if (plan.includes('6gb')) { ram = 6000; disk = 3000; cpu = 140; }
+      else if (plan.includes('7gb')) { ram = 7000; disk = 4000; cpu = 160; }
+      else if (plan.includes('8gb')) { ram = 8000; disk = 4000; cpu = 180; }
+      else if (plan.includes('9gb')) { ram = 9000; disk = 5000; cpu = 200; }
+      else if (plan.includes('10gb')) { ram = 10000; disk = 5000; cpu = 220; }
+      else if (plan.includes('unli') || plan.includes('unlimited')) { ram = 0; disk = 0; cpu = 0; }
+    }
+
+    const ramValue = parseInt(ram) === 0 ? 0 : parseInt(ram);
+    const diskValue = parseInt(disk) === 0 ? 0 : parseInt(disk);
+    const cpuValue = parseInt(cpu);
+    
+    // Setup Pterodactyl variables (untuk panel server)
+    let panelUser = null, panelServer = null, panelPassword = null;
+    let panelUserPassword = null;
+    const settings = await db.getSettings() || {};
+
+    try {
+      console.log('Creating server with specs (Muuclin):', { ram: ramValue, disk: diskValue, cpu: cpuValue });
       
-      if (voucher) {
-        if (totalPriceBase < voucher.minPurchase) {
-          return res.json({ success: false, message: `Minimal pembelian Rp ${voucher.minPurchase.toLocaleString()} untuk voucher ini` });
-        }
-        if (voucher.usedCount >= voucher.maxUsage) {
-          return res.json({ success: false, message: 'Voucher sudah habis digunakan' });
-        }
+      // Create panel user jika Pterodactyl tersedia
+      if (pterodactyl && settings.panel?.domain) {
+        const panelUsername = `${user.username}-${Date.now()}`;
+        panelPassword = Math.random().toString(36).substring(2, 12);
+        const userResult = await pterodactyl.createUser(panelUsername, user.username);
+        panelUser = userResult.user || userResult;
+        panelUserPassword = userResult.password || panelPassword;
         
-        const discount = voucher.discountType === 'percent' 
-          ? Math.floor(totalPriceBase * (voucher.discountValue / 100))
-          : voucher.discountValue;
-        
-        totalPrice = Math.max(0, totalPriceBase - discount);
+        panelServer = await pterodactyl.createServer({
+          name: serverName || `${user.username} Server`,
+          userId: panelUser.id,
+          ram: ramValue,
+          disk: diskValue,
+          cpu: cpuValue
+        });
+        console.log('Server created successfully:', panelServer.id);
       } else {
-        return res.json({ success: false, message: 'Voucher tidak valid atau sudah tidak aktif' });
+        console.log('Pterodactyl panel tidak tersedia, melanjutkan tanpa panel');
       }
-    }
-
-    if (user.balance < totalPrice) {
-      return res.json({ 
-        success: false, 
-        message: `Saldo tidak cukup. Dibutuhkan Rp ${totalPrice.toLocaleString('id-ID')}, saldo Anda Rp ${user.balance.toLocaleString('id-ID')}` 
-      });
-    }
-
-    const settings = await db.getSettings();
-    if (!settings.panel?.domain || !settings.panel?.apikey) {
-      return res.json({ 
-        success: false, 
-        message: 'Panel belum dikonfigurasi. Hubungi admin.' 
-      });
-    }
-
-    const panelUsername = (serverName || user.username).toLowerCase().replace(/[^a-z0-9]/g, '') + Date.now().toString().slice(-4);
-    
-    let panelUser, panelPassword, panelServer;
-    
-    try {
-      console.log('Creating panel user:', panelUsername);
-      const userResult = await pterodactyl.createUser(panelUsername, serverName || user.username);
-      panelUser = userResult.user;
-      panelPassword = userResult.password;
-      console.log('Panel user created:', panelUser.id);
-    } catch (error) {
-      console.error('Error creating panel user:', error);
-      return res.json({ 
-        success: false, 
-        message: 'Gagal membuat akun panel: ' + error.message 
-      });
-    }
-
-    const ramValue = parseInt(server.ram) * 1000;
-    const diskValue = parseInt(server.disk) * 1000;
-    const cpuValue = parseInt(server.cpu);
-    
-    try {
-      console.log('Creating server with specs:', { ram: ramValue, disk: diskValue, cpu: cpuValue });
-      panelServer = await pterodactyl.createServer({
-        name: serverName || `${user.username} Server`,
-        userId: panelUser.id,
-        ram: ramValue,
-        disk: diskValue,
-        cpu: cpuValue
-      });
-      console.log('Server created successfully:', panelServer.id);
     } catch (error) {
       console.error('Error creating server on Pterodactyl:', error);
       // Try to cleanup the user if server creation fails
-      try {
-        await pterodactyl.deleteUser(panelUser.id);
-        console.log('Cleaned up panel user after server creation failure');
-      } catch (cleanupError) {
-        console.error('Failed to cleanup panel user:', cleanupError);
+      if (panelUser) {
+        try {
+          await pterodactyl.deleteUser(panelUser.id);
+          console.log('Cleaned up panel user after server creation failure');
+        } catch (cleanupError) {
+          console.error('Failed to cleanup panel user:', cleanupError);
+        }
       }
       return res.json({ 
         success: false, 
-        message: 'Gagal membuat server di panel: ' + (error.message || 'Unknown error')
+        message: 'Gagal membuat server: ' + (error.message || 'Unknown error')
       });
     }
 
@@ -172,11 +158,31 @@ router.post('/purchase', isAuthenticated, async (req, res) => {
     await db.updateUserBalance(user.id, newBalance);
 
     const durationText = {
+      '1day': '1 Hari',
+      '3day': '3 Hari',
+      '7day': '7 Hari',
+      '15day': '15 Hari',
       '1month': '1 Bulan',
       '3month': '3 Bulan',
       '6month': '6 Bulan',
       '1year': '1 Tahun'
     };
+
+    const orderDetails = {
+      ram: parseInt(ram),
+      cpu: parseInt(cpu),
+      disk: parseInt(disk),
+      location: location || 'Singapore',
+      duration: durationText[duration] || '1 Bulan'
+    };
+    
+    if (panelUser && panelUser.id) {
+      orderDetails.panelUserId = panelUser.id;
+      orderDetails.panelServerId = panelServer?.id;
+      orderDetails.panelUsername = panelUser.username || `${user.username}-${Date.now()}`;
+      orderDetails.panelPassword = panelUserPassword;
+      orderDetails.panelUrl = settings.panel?.domain;
+    }
 
     const orderId = await db.addOrder({
       userId: user.id,
@@ -186,26 +192,22 @@ router.post('/purchase', isAuthenticated, async (req, res) => {
       productName: serverName || server.name,
       totalPrice,
       status: 'completed',
-      serverDetails: JSON.stringify({
-        ram: server.ram,
-        cpu: server.cpu,
-        disk: server.disk,
-        location: server.location,
-        duration: durationText[duration] || '1 Bulan',
-        panelUserId: panelUser.id,
-        panelServerId: panelServer.id,
-        panelUsername: panelUser.username,
-        panelPassword: panelPassword,
-        panelUrl: settings.panel.domain
-      })
+      serverDetails: orderDetails
     });
+
+    try {
+      const telegram = require('../utils/telegram');
+      telegram.sendNotification(`🛒 <b>Order Baru (Server)</b>\nUser: ${user.username}\nProduk: ${serverName || server.name}\nTotal: Rp ${totalPrice.toLocaleString('id-ID')}`);
+    } catch (e) {
+      console.error('Telegram Notify Error:', e);
+    }
 
     await db.addTransaction({
       userId: user.id,
       type: 'purchase',
       amount: -totalPrice,
       status: 'completed',
-      description: `Pembelian server ${serverName || server.name}`,
+      description: `Pembelian server ${serverName || server.name} - ${parseInt(ram)}MB RAM, ${parseInt(cpu)} CPU`,
       productId: orderId
     });
 
@@ -216,11 +218,11 @@ router.post('/purchase', isAuthenticated, async (req, res) => {
       message: 'Server berhasil dibuat!',
       orderId,
       newBalance,
-      serverCredentials: {
+      serverCredentials: panelUser ? {
         username: panelUser.username,
         password: panelPassword,
-        loginUrl: settings.panel.domain
-      }
+        loginUrl: settings.panel?.domain
+      } : null
     });
   } catch (error) {
     console.error('Purchase Error:', error);

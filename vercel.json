@@ -8,12 +8,19 @@
   ],
   "routes": [
     {
-      "src": "/uploads/(.*)",
-      "dest": "/src/public/uploads/$1"
+      "src": "/(css|js|images|@Zayn)/(.*)",
+      "dest": "/src/public/$1/$2"
+    },
+    {
+      "src": "/api/notify",
+      "dest": "src/app.js"
     },
     {
       "src": "/(.*)",
-      "dest": "/src/app.js"
+      "dest": "src/app.js"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }

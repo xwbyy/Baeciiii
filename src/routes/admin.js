@@ -34,6 +34,21 @@ const upload = multer({
   }
 });
 
+router.get('/system-status', isAdmin, (req, res) => {
+  const os = require('os');
+  const freeMem = os.freemem();
+  const totalMem = os.totalmem();
+  const memUsage = Math.round(((totalMem - freeMem) / totalMem) * 100);
+  const load = os.loadavg()[0];
+  const cpuUsage = Math.round((load / os.cpus().length) * 100);
+  
+  res.json({
+    success: true,
+    mem: memUsage,
+    load: cpuUsage
+  });
+});
+
 router.get('/', isAdmin, async (req, res) => {
   try {
     const [users, products, servers, transactions, orders, settings, vouchers] = await Promise.all([

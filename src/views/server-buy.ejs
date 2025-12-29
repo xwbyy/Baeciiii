@@ -62,17 +62,17 @@
         <div class="grid grid-cols-3 gap-3 mb-6">
           <div class="text-center p-4 rounded-xl bg-white/5 border border-white/10">
             <i class="fas fa-memory text-purple-400 mb-2 text-xl"></i>
-            <div class="text-lg font-bold text-purple-400"><%= server.ram %></div>
+            <div class="text-lg font-bold text-purple-400"><%= server.ram %><% if(server.ram && !String(server.ram).includes('MB')){ %>MB<% } %></div>
             <div class="text-xs text-gray-500">RAM</div>
           </div>
           <div class="text-center p-4 rounded-xl bg-white/5 border border-white/10">
             <i class="fas fa-microchip text-pink-400 mb-2 text-xl"></i>
-            <div class="text-lg font-bold text-pink-400"><%= server.cpu %></div>
+            <div class="text-lg font-bold text-pink-400"><%= server.cpu %><% if(server.cpu && !String(server.cpu).includes('%')){ %>%<% } %></div>
             <div class="text-xs text-gray-500">CPU</div>
           </div>
           <div class="text-center p-4 rounded-xl bg-white/5 border border-white/10">
             <i class="fas fa-hdd text-orange-400 mb-2 text-xl"></i>
-            <div class="text-lg font-bold text-orange-400"><%= server.disk %></div>
+            <div class="text-lg font-bold text-orange-400"><%= server.disk %><% if(server.disk && !String(server.disk).includes('MB')){ %>MB<% } %></div>
             <div class="text-xs text-gray-500">Disk</div>
           </div>
         </div>
@@ -105,13 +105,17 @@
           <div>
             <label class="block text-sm font-medium text-gray-300 mb-2">
               <i class="fas fa-calendar text-purple-400 mr-2"></i>
-              Pilih rentang hari:
+              Pilih rentang waktu:
             </label>
             <select name="duration" id="durationSelect" class="w-full input-glass rounded-xl py-3 px-4 text-white">
-              <option value="1month" data-multiplier="1">1 Bulan</option>
-              <option value="3month" data-multiplier="2.85">3 Bulan (Diskon 5%)</option>
-              <option value="6month" data-multiplier="5.4">6 Bulan (Diskon 10%)</option>
-              <option value="1year" data-multiplier="10.2">1 Tahun (Diskon 15%)</option>
+              <option value="1day" data-multiplier="0.05">1 Hari</option>
+              <option value="3day" data-multiplier="0.15">3 Hari</option>
+              <option value="7day" data-multiplier="0.35">7 Hari</option>
+              <option value="15day" data-multiplier="0.65">15 Hari</option>
+              <option value="1month" data-multiplier="1" selected>1 Bulan</option>
+              <option value="3month" data-multiplier="3">3 Bulan (Diskon 5%)</option>
+              <option value="6month" data-multiplier="6">6 Bulan (Diskon 10%)</option>
+              <option value="1year" data-multiplier="12">1 Tahun (Diskon 15%)</option>
             </select>
           </div>
 
@@ -130,7 +134,7 @@
               Total Harga Diskon:
             </label>
             <div id="totalPrice" class="input-glass rounded-xl py-3 px-4 text-2xl font-bold gradient-text bg-white/5">
-              Rp <%= server.price.toLocaleString('id-ID') %>
+              Rp <span id="priceDisplay">-</span>
             </div>
           </div>
           
@@ -165,13 +169,18 @@
 </section>
 
 <script>
-  const basePrice = <%= server.price %>;
+  const basePriceRaw = parseInt('<%= server.price || 0 %>');
+  const basePrice = Math.max(0, isNaN(basePriceRaw) ? 0 : basePriceRaw);
   const durationSelect = document.getElementById('durationSelect');
-  const totalPriceEl = document.getElementById('totalPrice');
+  const priceDisplayEl = document.getElementById('priceDisplay');
   const purchaseForm = document.getElementById('purchaseForm');
   const purchaseBtn = document.getElementById('purchaseBtn');
   
   const discounts = {
+    '1day': 1,
+    '3day': 1,
+    '7day': 1,
+    '15day': 1,
     '1month': 1,
     '3month': 0.95,
     '6month': 0.90,
@@ -179,21 +188,60 @@
   };
   
   const multipliers = {
+    '1day': 0.05,
+    '3day': 0.15,
+    '7day': 0.35,
+    '15day': 0.65,
     '1month': 1,
     '3month': 3,
     '6month': 6,
     '1year': 12
   };
   
-  durationSelect.addEventListener('change', updatePrice);
+  function formatPrice(price) {
+    const num = Math.max(0, Math.floor(price));
+    return new Intl.NumberFormat('id-ID').format(num);
+  }
   
   function updatePrice() {
+    console.log('updatePrice called, basePrice:', basePrice);
+    
+    if (!basePrice || basePrice <= 0) {
+      priceDisplayEl.textContent = '0';
+      console.log('basePrice invalid:', basePrice);
+      return;
+    }
+    
     const duration = durationSelect.value;
-    const discount = discounts[duration];
-    const multiplier = multipliers[duration];
+    const discount = discounts[duration] || 1;
+    const multiplier = multipliers[duration] || 1;
     const total = Math.floor(basePrice * multiplier * discount);
-    totalPriceEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
+    
+    console.log('Updating price:', { basePrice, duration, discount, multiplier, total });
+    priceDisplayEl.textContent = formatPrice(total);
   }
+  
+  // Bind events
+  if (durationSelect) {
+    durationSelect.addEventListener('change', updatePrice);
+  }
+  
+  // Listen for voucher code changes
+  const voucherInput = document.querySelector('input[name="voucherCode"]');
+  if (voucherInput) {
+    voucherInput.addEventListener('change', updatePrice);
+    voucherInput.addEventListener('input', updatePrice);
+  }
+  
+  // Update on page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updatePrice);
+  } else {
+    updatePrice();
+  }
+  
+  // Emergency update after delay to ensure it's loaded
+  setTimeout(updatePrice, 100);
   
   purchaseForm.addEventListener('submit', async (e) => {
     e.preventDefault();

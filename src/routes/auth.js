@@ -109,6 +109,13 @@ router.post('/register', isGuest, async (req, res) => {
       referralCode
     });
 
+    try {
+      const telegram = require('../utils/telegram');
+      telegram.sendNotification(`🆕 <b>User Baru</b>\nUsername: ${username}\nEmail: ${email}\nPhone: ${phone}`);
+    } catch (e) {
+      console.error('Telegram Notify Error:', e);
+    }
+
     if (req.body.referredBy) {
       const users = await db.getUsers();
       const referrer = users.find(u => u.referralCode === req.body.referredBy.toUpperCase());

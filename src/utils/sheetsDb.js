@@ -28,7 +28,7 @@ const cache = {
   sheetsChecked: false
 };
 
-const CACHE_TTL = 30000;
+const CACHE_TTL = 60000; // Increase TTL to 60 seconds
 
 function invalidateCache(sheetName) {
   if (cache[sheetName]) {
@@ -321,6 +321,9 @@ async function getServers() {
   const servers = await getSheetData('servers');
   return servers.map(s => ({
     ...s,
+    ram: s.ram || '',
+    cpu: s.cpu || '',
+    disk: s.disk || '',
     price: parseInt(s.price) || 0,
     isActive: s.isActive !== 'false'
   }));
