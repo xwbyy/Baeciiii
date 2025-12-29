@@ -7,6 +7,8 @@ const credentials = require('./credentials.json');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+app.set('trust proxy', 1);
+
 // Security: Rate limiting to prevent brute force
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
