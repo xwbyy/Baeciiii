@@ -16,18 +16,18 @@
   <meta property="og:url" content="https://baeci-host.xyz">
   <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'Baeci Market - Marketplace Premium Pterodactyl' %>">
   <meta property="og:description" content="Marketplace premium untuk server panel Pterodactyl dan produk digital berkualitas.">
-  <meta property="og:image" content="/images/favicon.png">
+  <meta property="og:image" content="https://files.catbox.moe/l5cbmr.jpg">
 
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image">
   <meta property="twitter:url" content="https://baeci-host.xyz">
   <meta property="twitter:title" content="<%= typeof title !== 'undefined' ? title : 'Baeci Market - Marketplace Premium Pterodactyl' %>">
   <meta property="twitter:description" content="Marketplace premium untuk server panel Pterodactyl dan produk digital berkualitas.">
-  <meta property="twitter:image" content="/favicon.png">
+  <meta property="twitter:image" content="https://files.catbox.moe/l5cbmr.jpg">
 
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/images/favicon.png">
-  <link rel="apple-touch-icon" href="/images/favicon.png">
+  <link rel="icon" type="image/png" href="https://files.catbox.moe/l5cbmr.jpg">
+  <link rel="apple-touch-icon" href="https://files.catbox.moe/l5cbmr.jpg">
 
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -396,28 +396,47 @@
   const mobileMenuOverlay = document.getElementById('mobileMenuOverlay');
   const closeMobileMenu = document.getElementById('closeMobileMenu');
 
-  // Welcome Modal Logic
+  // Welcome Modal Logic dengan LocalStorage
   const welcomeModal = document.getElementById('welcomeModal');
-  const welcomeOverlay = document.getElementById('welcomeOverlay');
   const closeWelcomeModal = document.getElementById('closeWelcomeModal');
+  const WELCOME_MODAL_KEY = 'baeci_market_welcome_closed';
 
   function openWelcomeModal() {
-    welcomeModal.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+    // Cek apakah modal sudah ditutup sebelumnya
+    const isClosed = localStorage.getItem(WELCOME_MODAL_KEY);
+    
+    // Jika belum pernah ditutup, tampilkan modal
+    if (!isClosed) {
+      welcomeModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
   }
 
   function closeWelcomeModalFn() {
     welcomeModal.classList.add('hidden');
     document.body.style.overflow = '';
+    
+    // Simpan status di localStorage bahwa modal sudah ditutup
+    localStorage.setItem(WELCOME_MODAL_KEY, 'true');
   }
 
-  // Always show on refresh/open
+  // Modal tetap bisa ditampilkan dari server jika diperlukan
+  <% if (typeof showWelcomeModal !== 'undefined' && showWelcomeModal === true) { %>
+    // Force show modal dari server (untuk pengguna baru atau kondisi tertentu)
+    localStorage.removeItem(WELCOME_MODAL_KEY);
+  <% } %>
+
+  // Tampilkan modal setelah halaman siap
   window.addEventListener('DOMContentLoaded', () => {
     setTimeout(openWelcomeModal, 500);
   });
 
   closeWelcomeModal?.addEventListener('click', closeWelcomeModalFn);
-  welcomeOverlay?.addEventListener('click', closeWelcomeModalFn);
+  welcomeModal?.addEventListener('click', (e) => {
+    if (e.target === welcomeModal || e.target.classList.contains('modal-overlay')) {
+      closeWelcomeModalFn();
+    }
+  });
 
   function openMobileMenu() {
     mobileMenu.classList.add('open');
@@ -434,4 +453,15 @@
   mobileMenuBtn?.addEventListener('click', openMobileMenu);
   closeMobileMenu?.addEventListener('click', closeMobileMenuFn);
   mobileMenuOverlay?.addEventListener('click', closeMobileMenuFn);
+
+  // Tambahkan overlay untuk modal welcome
+  const welcomeOverlay = document.createElement('div');
+  welcomeOverlay.className = 'modal-overlay fixed inset-0 z-[99]';
+  welcomeModal.querySelector('#welcomeOverlay').parentNode.insertBefore(welcomeOverlay, welcomeModal.querySelector('#welcomeOverlay'));
+
+  // Fungsi untuk reset modal (untuk testing atau kondisi tertentu)
+  window.resetWelcomeModal = function() {
+    localStorage.removeItem(WELCOME_MODAL_KEY);
+    openWelcomeModal();
+  }
 </script>
