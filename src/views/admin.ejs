@@ -78,6 +78,12 @@
         <button onclick="showTab('api')" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap" data-tab="api">
           <i class="fas fa-key mr-1 sm:mr-2"></i>API
         </button>
+        <button onclick="showTab('otp')" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap" data-tab="otp">
+          <i class="fas fa-sms mr-1 sm:mr-2"></i>OTP Config
+        </button>
+        <button onclick="showTab('digiflazz')" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap" data-tab="digiflazz">
+          <i class="fas fa-mobile-alt mr-1 sm:mr-2"></i>Digiflazz
+        </button>
         <button onclick="showTab('vouchers')" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap" data-tab="vouchers">
           <i class="fas fa-ticket-alt mr-1 sm:mr-2"></i>Voucher
         </button>
@@ -445,6 +451,66 @@
       </div>
     </div>
     
+    <div id="digiflazzTab" class="tab-content hidden">
+      <div class="glass-card rounded-xl p-3 sm:p-5">
+        <h3 class="font-semibold text-sm flex items-center gap-2 mb-3">
+          <i class="fas fa-mobile-alt text-blue-400"></i>
+          Digiflazz Configuration
+        </h3>
+        <form id="digiflazzSettingsForm" class="space-y-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Username Digiflazz</label>
+            <input type="text" name="username" value="<%= settings.digiflazz?.username || '' %>" class="w-full input-glass rounded-lg py-2 px-3 text-sm" placeholder="yusexogGVXpW">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Development API Key</label>
+            <input type="password" name="dev_apikey" value="<%= settings.digiflazz?.dev_apikey || '' %>" class="w-full input-glass rounded-lg py-2 px-3 text-sm font-mono" placeholder="dev-...">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Production API Key</label>
+            <input type="password" name="prod_apikey" value="<%= settings.digiflazz?.prod_apikey || '' %>" class="w-full input-glass rounded-lg py-2 px-3 text-sm font-mono" placeholder="e3f0110c-...">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Mode API</label>
+            <select name="mode" class="w-full input-glass rounded-lg py-2 px-3 text-sm">
+              <option value="development" <%= (settings.digiflazz?.mode === 'development') ? 'selected' : '' %>>Development</option>
+              <option value="production" <%= (settings.digiflazz?.mode === 'production') ? 'selected' : '' %>>Production</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Keuntungan (Profit %)</label>
+            <input type="number" name="profit_percent" value="<%= settings.digiflazz?.profit_percent || '10' %>" class="w-full input-glass rounded-lg py-2 px-3 text-sm" placeholder="10">
+          </div>
+          <button type="submit" class="w-full btn-primary py-2 rounded-lg text-sm font-medium">
+            <i class="fas fa-save mr-2"></i>Simpan Konfigurasi Digiflazz
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div id="otpTab" class="tab-content hidden">
+      <div class="glass-card rounded-xl p-3 sm:p-5">
+        <h3 class="font-semibold text-sm flex items-center gap-2 mb-3">
+          <i class="fas fa-sms text-yellow-400"></i>
+          RumahOTP Configuration
+        </h3>
+        <form id="otpSettingsForm" class="space-y-3">
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">API Key RumahOTP</label>
+            <input type="password" name="apikey" value="<%= settings.otp?.apikey || '' %>" class="w-full input-glass rounded-lg py-2 px-3 text-sm font-mono" placeholder="otp_xxxxxxxxxxxx">
+          </div>
+          <div>
+            <label class="block text-xs text-gray-400 mb-1">Keuntungan (Profit %)</label>
+            <input type="number" name="profit_percent" value="<%= settings.otp?.profit_percent || '10' %>" class="w-full input-glass rounded-lg py-2 px-3 text-sm" placeholder="10">
+            <p class="text-[10px] text-gray-500 mt-1">Persentase keuntungan yang ditambahkan ke harga asli RumahOTP.</p>
+          </div>
+          <button type="submit" class="w-full btn-primary py-2 rounded-lg text-sm font-medium">
+            <i class="fas fa-save mr-2"></i>Simpan Konfigurasi OTP
+          </button>
+        </form>
+      </div>
+    </div>
+
     <div id="apiTab" class="tab-content hidden">
       <div class="space-y-4">
         <div class="glass-card rounded-xl p-3 sm:p-5">
@@ -922,6 +988,26 @@
     const data = Object.fromEntries(new FormData(e.target).entries());
     const r = await apiCall('/admin/api/panel', 'POST', data);
     alert(r.message);
+  });
+
+  const digiflazzSettingsForm = document.getElementById('digiflazzSettingsForm');
+  digiflazzSettingsForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(digiflazzSettingsForm);
+    const data = Object.fromEntries(formData.entries());
+    const r = await apiCall('/admin/api/digiflazz', 'POST', data);
+    alert(r.message);
+    if (r.success) location.reload();
+  });
+
+  const otpSettingsForm = document.getElementById('otpSettingsForm');
+  otpSettingsForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(otpSettingsForm);
+    const data = Object.fromEntries(formData.entries());
+    const r = await apiCall('/admin/api/otp', 'POST', data);
+    alert(r.message);
+    if (r.success) location.reload();
   });
 
   document.getElementById('tokopaySettingsForm').addEventListener('submit', async (e) => {

@@ -195,13 +195,6 @@ router.post('/purchase', isAuthenticated, async (req, res) => {
       serverDetails: orderDetails
     });
 
-    try {
-      const telegram = require('../utils/telegram');
-      telegram.sendNotification(`🛒 <b>Order Baru (Server)</b>\nUser: ${user.username}\nProduk: ${serverName || server.name}\nTotal: Rp ${totalPrice.toLocaleString('id-ID')}`);
-    } catch (e) {
-      console.error('Telegram Notify Error:', e);
-    }
-
     await db.addTransaction({
       userId: user.id,
       type: 'purchase',

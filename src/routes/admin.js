@@ -490,6 +490,39 @@ router.post('/api/tokopay', isAdmin, async (req, res) => {
   }
 });
 
+router.post('/api/digiflazz', isAdmin, async (req, res) => {
+  try {
+    const { username, dev_apikey, prod_apikey, mode, profit_percent } = req.body;
+    await db.updateSetting('digiflazz', {
+      username: username || '',
+      dev_apikey: dev_apikey || '',
+      prod_apikey: prod_apikey || '',
+      mode: mode || 'development',
+      profit_percent: parseInt(profit_percent) || 10
+    });
+    res.json({ success: true, message: 'Konfigurasi Digiflazz berhasil disimpan' });
+  } catch (error) {
+    console.error('Update Digiflazz Settings Error:', error);
+    res.json({ success: false, message: 'Gagal menyimpan konfigurasi Digiflazz' });
+  }
+});
+
+router.post('/api/otp', isAdmin, async (req, res) => {
+  try {
+    const { apikey, profit_percent } = req.body;
+    
+    await db.updateSetting('otp', {
+      apikey: apikey || '',
+      profit_percent: parseInt(profit_percent) || 10
+    });
+
+    res.json({ success: true, message: 'Konfigurasi OTP berhasil disimpan' });
+  } catch (error) {
+    console.error('Update OTP Settings Error:', error);
+    res.json({ success: false, message: 'Gagal menyimpan konfigurasi OTP' });
+  }
+});
+
 router.post('/vouchers/add', isAdmin, async (req, res) => {
   try {
     await db.addVoucher(req.body);

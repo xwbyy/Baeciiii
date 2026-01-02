@@ -1,6 +1,5 @@
 const cron = require('node-cron');
 const db = require('./sheetsDb');
-const telegram = require('./telegram');
 const pterodactyl = require('./pterodactyl');
 
 const initCron = () => {
@@ -27,6 +26,7 @@ const initCron = () => {
               else if (yearsMatch) durationDays = parseInt(yearsMatch[1]) * 365;
             }
 
+            const createdAt = new Date(order.createdAt || now);
             const expiryDate = new Date(createdAt.getTime() + (durationDays * 24 * 60 * 60 * 1000));
             const timeDiff = expiryDate.getTime() - now.getTime();
             const daysRemaining = Math.ceil(timeDiff / (24 * 60 * 60 * 1000));
@@ -42,8 +42,6 @@ const initCron = () => {
               }
 
               await db.updateOrder(order.id, { status: 'expired' });
-              
-              await telegram.sendNotification(`🚨 <b>Server Expired</b>\nOrder ID: ${order.id}\nUser: ${order.username}\nAction: Auto-deleted`);
               
               // Notifikasi ke Dashboard User (Sudah Expired)
               await db.addNotification({
@@ -62,8 +60,6 @@ const initCron = () => {
                   ? `Server Anda (${order.productName}) akan berakhir dalam ${daysRemaining} hari lagi. Segera perpanjang agar data tetap aman!`
                   : `Server Anda (${order.productName}) akan berakhir hari ini! Segera perpanjang sebelum dihapus otomatis.`;
 
-                await telegram.sendNotification(`⚠️ <b>Server Expiring Soon</b>\nOrder ID: ${order.id}\nUser: ${order.username}\nExpires in: ${daysRemaining} day(s).`);
-                
                 // Notifikasi ke Dashboard User
                 await db.addNotification({
                   userId: order.userId,
@@ -87,17 +83,15 @@ const initCron = () => {
 
   // System health check every 30 mins
   cron.schedule('*/30 * * * *', async () => {
-    const stats = telegram.getSystemStats();
     console.log('[CRON] System Health Check');
   });
 
-  // Daily Backup to Telegram Admin (00:00)
+  // Daily Backup Summary (00:00)
   cron.schedule('0 0 * * *', async () => {
     try {
       const users = await db.getUsers();
       const settings = await db.getSettings();
-      const backupMsg = `💾 <b>Daily Backup Summary</b>\nTotal Users: ${users.length}\nSite Name: ${settings.siteName || 'N/A'}\nTime: ${new Date().toLocaleString('id-ID')}`;
-      await telegram.sendNotification(backupMsg);
+      console.log(`[BACKUP] Total Users: ${users.length}, Site: ${settings.siteName || 'N/A'}`);
     } catch (e) {
       console.error('[BACKUP ERROR]', e);
     }

@@ -198,26 +198,78 @@
     }
     
     ::-webkit-scrollbar {
-      width: 6px;
+      width: 4px;
     }
     
     ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.02);
+      background: transparent;
     }
     
     ::-webkit-scrollbar-thumb {
-      background: rgba(147, 51, 234, 0.4);
-      border-radius: 3px;
+      background: rgba(147, 51, 234, 0.3);
+      border-radius: 10px;
     }
     
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(147, 51, 234, 0.6);
+      background: rgba(147, 51, 234, 0.5);
+    }
+
+    .mobile-menu-content {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(147, 51, 234, 0.3) transparent;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
     }
 
     @media (max-width: 640px) {
       .hide-mobile { display: none !important; }
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    .swal2-popup {
+      background: rgba(26, 26, 46, 0.95) !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      border-radius: 24px !important;
+      color: #fff !important;
+    }
+    .swal2-title {
+      color: #fff !important;
+      font-weight: 700 !important;
+    }
+    .swal2-html-container {
+      color: rgba(255, 255, 255, 0.8) !important;
+    }
+    .swal2-confirm {
+      background: linear-gradient(135deg, #9333ea 0%, #c026d3 100%) !important;
+      border-radius: 12px !important;
+      padding: 12px 32px !important;
+      font-weight: 600 !important;
+    }
+  </style>
+  <script>
+    window.showAlert = (title, text, icon = 'info') => {
+      Swal.fire({
+        title,
+        text,
+        icon,
+        confirmButtonText: 'Oke',
+        background: '#1a1a2e',
+        color: '#fff',
+        customClass: {
+          popup: 'glass-card rounded-3xl',
+          confirmButton: 'btn-primary px-8 py-3 rounded-xl'
+        }
+      });
+    };
+    
+    // Override default alert
+    window.alert = (msg) => {
+      showAlert('Informasi', msg);
+    };
+  </script>
 </head>
 <body class="text-white antialiased">
   <nav class="nav-glass fixed top-0 left-0 right-0 z-50 border-b border-white/10">
@@ -234,6 +286,7 @@
           <a href="/" class="text-gray-300 hover:text-white transition text-sm">Beranda</a>
           <a href="/server" class="text-gray-300 hover:text-white transition text-sm">Server</a>
           <a href="/products" class="text-gray-300 hover:text-white transition text-sm">Produk</a>
+          <a href="/otp" class="text-gray-300 hover:text-white transition text-sm">Beli OTP</a>
           <% if (user) { %>
             <a href="/profile/transactions" class="text-gray-300 hover:text-white transition text-sm">Transaksi</a>
           <% } %>
@@ -282,7 +335,7 @@
         </button>
       </div>
       
-      <div class="flex-1 overflow-y-auto p-4 space-y-2">
+      <div class="flex-1 overflow-y-auto p-4 space-y-2 mobile-menu-content">
         <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
           <i class="fas fa-home text-purple-400 w-5 text-center"></i>
           <span class="text-sm font-medium">Beranda</span>
@@ -294,6 +347,14 @@
         <a href="/products" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
           <i class="fas fa-box text-purple-400 w-5 text-center"></i>
           <span class="text-sm font-medium">Produk Digital</span>
+        </a>
+        <a href="/otp" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+          <i class="fas fa-sms text-yellow-400 w-5 text-center"></i>
+          <span class="text-sm font-medium">Beli OTP</span>
+        </a>
+        <a href="/digital" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+          <i class="fas fa-bolt text-yellow-400 w-5 text-center"></i>
+          <span class="text-sm font-medium">Topup & Pulsa</span>
         </a>
         
         <% if (user) { %>

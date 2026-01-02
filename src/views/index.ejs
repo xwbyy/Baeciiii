@@ -109,35 +109,44 @@
 </section>
 <% } %>
 
-<% if (products && products.length > 0) { %>
 <section class="py-6 sm:py-10 px-3 sm:px-4">
   <div class="max-w-7xl mx-auto">
     <div class="flex items-center justify-between mb-4 sm:mb-6">
       <h2 class="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2">
         <i class="fas fa-box text-pink-400"></i>
-        <span>Produk Digital</span>
+        <span>Produk Populer</span>
       </h2>
       <a href="/products" class="text-purple-400 hover:text-purple-300 transition flex items-center gap-1 text-xs sm:text-sm">
         Semua <i class="fas fa-arrow-right text-xs"></i>
       </a>
     </div>
     
-    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
       <% products.forEach((product, index) => { %>
-        <a href="/products/<%= product.id %>" class="glass-card rounded-xl sm:rounded-2xl overflow-hidden product-card fade-in">
-          <div class="aspect-square bg-gradient-to-br from-purple-900/50 to-pink-900/50 flex items-center justify-center">
+        <a href="/products/<%= product.id %>" class="glass-card rounded-2xl overflow-hidden product-card fade-in group relative">
+          <div class="aspect-[4/5] relative overflow-hidden">
             <% if (product.image) { %>
-              <img src="<%= product.image %>" alt="<%= product.name %>" class="w-full h-full object-cover">
+              <img src="<%= product.image %>" alt="<%= product.name %>" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110">
             <% } else { %>
-              <i class="fas fa-box text-2xl sm:text-3xl text-purple-400"></i>
+              <div class="w-full h-full bg-gradient-to-br from-purple-900/50 to-pink-900/50 flex items-center justify-center">
+                <i class="fas fa-gamepad text-3xl text-purple-400/50"></i>
+              </div>
             <% } %>
-          </div>
-          <div class="p-2.5 sm:p-3">
-            <div class="text-[10px] text-purple-400 mb-0.5"><%= product.category || 'Digital Product' %></div>
-            <h3 class="font-medium text-xs sm:text-sm mb-1 line-clamp-1"><%= product.name %></h3>
-            <div class="flex items-center justify-between">
-              <span class="font-bold text-xs sm:text-sm text-orange-400">Rp <%= product.price.toLocaleString('id-ID') %></span>
-              <span class="text-[10px] text-gray-500">Stok: <%= product.stock %></span>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
+            
+            <% if (product.isTrending) { %>
+              <div class="absolute top-2 right-2 px-2 py-0.5 rounded-lg bg-red-500 text-[10px] font-bold flex items-center gap-1 shadow-lg">
+                <i class="fas fa-fire text-[8px]"></i>
+                <span>TRENDING</span>
+              </div>
+            <% } %>
+
+            <div class="absolute bottom-0 left-0 right-0 p-3">
+              <div class="text-[10px] text-purple-400 font-medium mb-0.5 uppercase tracking-wider flex items-center gap-1">
+                <i class="fas fa-tag text-[8px]"></i>
+                <%= product.category || 'Game' %>
+              </div>
+              <h3 class="font-bold text-sm sm:text-base text-white mb-1 line-clamp-1 group-hover:text-purple-300 transition-colors"><%= product.name %></h3>
             </div>
           </div>
         </a>
@@ -145,7 +154,6 @@
     </div>
   </div>
 </section>
-<% } %>
 
 <section class="py-8 sm:py-12 px-3 sm:px-4">
   <div class="max-w-4xl mx-auto">

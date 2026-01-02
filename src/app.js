@@ -59,6 +59,7 @@ const depositRoutes = require('./routes/deposit');
 const adminRoutes = require('./routes/admin');
 const profileRoutes = require('./routes/profile');
 const apiRoutes = require('./routes/api');
+const callbackRoutes = require('./routes/callback');
 const { initCron } = require('./utils/cron');
 
 initCron();
@@ -71,6 +72,7 @@ app.use('/deposit', depositRoutes);
 app.use('/admin', adminRoutes);
 app.use('/profile', profileRoutes);
 app.use('/api', apiRoutes);
+app.use('/callback', callbackRoutes);
 
 app.use((req, res) => {
   res.status(404).render('404', { title: 'Halaman Tidak Ditemukan' });

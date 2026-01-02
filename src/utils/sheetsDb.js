@@ -527,7 +527,7 @@ async function getSettings() {
 
 async function updateSetting(key, value) {
   const rows = await getSheetData('settings');
-  const existing = rows.find(r => r.key === key);
+  const existing = Array.isArray(rows) ? rows.find(r => r.key === key) : null;
   
   const valueStr = typeof value === 'object' ? JSON.stringify(value) : String(value);
   

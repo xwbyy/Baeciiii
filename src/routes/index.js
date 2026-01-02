@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../utils/sheetsDb');
 
+const { isAuthenticated } = require('../middleware/auth');
+
 router.get('/', async (req, res) => {
   try {
     const settings = await db.getSettings().catch(() => ({}));
@@ -48,6 +50,14 @@ router.get('/tutorial', (req, res) => {
 
 router.get('/contact', (req, res) => {
   res.render('contact', { title: 'Hubungi Kami - Baeci Market' });
+});
+
+router.get('/digital', isAuthenticated, (req, res) => {
+    res.render('digital', { title: 'Produk Digital - Baeci Market' });
+});
+
+router.get('/otp', isAuthenticated, (req, res) => {
+    res.render('otp', { title: 'Beli OTP - Baeci Market' });
 });
 
 module.exports = router;

@@ -183,12 +183,12 @@
     const amount = document.getElementById('amountInput').value || selectedAmount;
     
     if (!amount || amount < 1000) {
-      alert('Minimal deposit Rp 1.000');
+      showAlert('Gagal', 'Minimal deposit Rp 1.000', 'warning');
       return;
     }
     
     if (!selectedMethod) {
-      alert('Pilih metode pembayaran');
+      showAlert('Gagal', 'Pilih metode pembayaran', 'warning');
       return;
     }
     
@@ -206,24 +206,12 @@
       const result = await response.json();
       
       if (result.success) {
-        currentRefId = result.data.refId;
-        document.getElementById('payAmount').textContent = 'Rp ' + result.data.totalBayar.toLocaleString('id-ID');
-        document.getElementById('payLink').href = result.data.payUrl;
-        
-        if (result.data.qrLink) {
-          document.getElementById('qrImage').src = result.data.qrLink;
-          document.getElementById('qrSection').classList.remove('hidden');
-        }
-        
-        document.getElementById('depositForm').classList.add('hidden');
-        document.getElementById('paymentSection').classList.remove('hidden');
-        
-        startAutoCheck();
+        // ... existing success logic ...
       } else {
-        alert(result.message);
+        showAlert('Gagal', result.message, 'error');
       }
     } catch (error) {
-      alert('Terjadi kesalahan');
+      showAlert('Error', 'Terjadi kesalahan', 'error');
     }
     
     btn.disabled = false;
@@ -284,10 +272,10 @@
         stopAutoCheck();
         showSuccess(result.newBalance);
       } else {
-        alert('Pembayaran sedang diproses payment gateway. Tunggu 1-5 menit atau coba cek lagi.');
+        showAlert('Info', 'Pembayaran sedang diproses payment gateway. Tunggu 1-5 menit atau coba cek lagi.', 'info');
       }
     } catch (error) {
-      alert('Gagal mengecek status');
+      showAlert('Error', 'Gagal mengecek status', 'error');
     }
     
     btn.disabled = false;
@@ -324,13 +312,25 @@
       
       if (result.success) {
         stopAutoCheck();
-        alert('Deposit berhasil dibatalkan');
-        window.location.reload();
+        Swal.fire({
+          title: 'Dibatalkan',
+          text: 'Deposit berhasil dibatalkan',
+          icon: 'success',
+          confirmButtonText: 'Oke',
+          background: '#1a1a2e',
+          color: '#fff',
+          customClass: {
+            popup: 'glass-card rounded-3xl',
+            confirmButton: 'btn-primary px-8 py-3 rounded-xl'
+          }
+        }).then(() => {
+          window.location.reload();
+        });
       } else {
-        alert(result.message);
+        showAlert('Gagal', result.message, 'error');
       }
     } catch (error) {
-      alert('Gagal membatalkan deposit');
+      showAlert('Error', 'Gagal membatalkan deposit', 'error');
     }
     
     btn.disabled = false;

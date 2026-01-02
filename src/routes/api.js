@@ -1,7 +1,244 @@
 const express = require('express');
 const router = express.Router();
-const { sendNotification } = require('../utils/telegram');
 const db = require('../utils/sheetsDb');
+
+const digi = require('../utils/digiflazz');
+
+// Digiflazz Routes
+router.get('/digiflazz/products', async (req, res) => {
+    try {
+        const { category } = req.query;
+        const result = await digi.getPriceList();
+        
+        // Digiflazz price-list returns { data: [...] }
+        const rawData = result.data || result;
+        
+        if (rawData && Array.isArray(rawData)) {
+            const settings = await db.getSettings();
+            const profit = settings.digiflazz?.profit_percent || 10;
+            
+            // If we got a fallback from cache due to rate limit, result.data will be the array
+            const finalData = Array.isArray(rawData) ? rawData : [];
+            
+            let filtered = finalData;
+            if (category) {
+                // Mapping category for Digiflazz compatibility
+                let searchCategory = category;
+                if (category === 'Games') searchCategory = 'Games';
+                if (category === 'PLN') searchCategory = 'PLN';
+                if (category === 'Pulsa') searchCategory = 'Pulsa';
+                if (category === 'Data') searchCategory = 'Data';
+                
+                filtered = rawData.filter(p => {
+                    // Check for main category
+                    if (p.category === searchCategory) return true;
+                    // Check for games sub-categories if main category is Games
+                    if (category === 'Games' && (p.category.includes('Games') || p.category.includes('Voucher'))) return true;
+                    // Check for e-money etc
+                    if (category === 'E-Money' && p.category.includes('E-Money')) return true;
+                    return false;
+                });
+            }
+            
+            const processed = filtered.map(p => ({
+                ...p,
+                user_price: digi.calculatePrice(p.price, profit)
+            }));
+            
+            res.json({ success: true, data: processed });
+        } else {
+            console.error('Digiflazz PriceList Invalid Format:', result);
+            res.json({ success: false, message: 'Gagal memuat produk Digiflazz: Format data tidak valid' });
+        }
+    } catch (error) {
+        console.error('Digiflazz Product Route Error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.post('/digiflazz/topup', async (req, res) => {
+    try {
+        if (!req.session.user) return res.status(401).json({ success: false, message: 'Silakan login' });
+        
+        const { sku, customerNo, price } = req.body;
+        const users = await db.getUsers();
+        const user = users.find(u => u.id === req.session.user.id);
+        
+        if (user.balance < price) {
+            return res.status(400).json({ success: false, message: 'Saldo tidak mencukupi' });
+        }
+
+        const refId = 'DIGI' + Date.now();
+        const result = await digi.topup(refId, customerNo, sku);
+        
+        if (result.data) {
+            const data = result.data;
+            // Potong saldo jika tidak gagal langsung
+            if (data.status !== 'Gagal') {
+                await db.updateUserBalance(user.id, user.balance - price);
+                
+                const finalStatus = data.status === 'Sukses' ? 'completed' : 'processing';
+                
+                await db.addTransaction({
+                    userId: user.id,
+                    type: 'purchase',
+                    amount: -price,
+                    status: finalStatus,
+                    description: `Topup ${data.buyer_sku_code} ke ${customerNo}`,
+                    refId: refId
+                });
+
+                await db.addOrder({
+                    userId: user.id,
+                    username: user.username,
+                    productType: 'Digital',
+                    productId: refId,
+                    productName: `${data.buyer_sku_code} - ${customerNo}`,
+                    totalPrice: price,
+                    status: finalStatus
+                });
+            }
+            res.json({ success: data.status !== 'Gagal', data: data, message: data.message });
+        } else {
+            res.json({ success: false, message: 'Gagal memproses transaksi' });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+const otpApi = require('../utils/otp');
+
+// OTP Routes
+router.get('/otp/services', async (req, res) => {
+    try {
+        const result = await otpApi.getServices();
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.get('/otp/countries', async (req, res) => {
+    try {
+        const { service_id } = req.query;
+        const result = await otpApi.getCountries(service_id);
+        
+        if (result.success) {
+            const settings = await db.getSettings();
+            const profit = settings.otp?.profit_percent || 10;
+            
+            result.data = result.data.map(country => ({
+                ...country,
+                pricelist: country.pricelist.map(price => ({
+                    ...price,
+                    user_price: otpApi.calculatePrice(price.price, profit)
+                }))
+            }));
+        }
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.get('/otp/operators', async (req, res) => {
+    try {
+        const { country, provider_id } = req.query;
+        const result = await otpApi.getOperators(country, provider_id);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.post('/otp/order', async (req, res) => {
+    try {
+        if (!req.session.user) return res.status(401).json({ success: false, message: 'Silakan login' });
+        
+        const { number_id, provider_id, operator_id, price } = req.body;
+        
+        // Check balance
+        const users = await db.getUsers();
+        const user = users.find(u => u.id === req.session.user.id);
+        
+        if (user.balance < price) {
+            return res.status(400).json({ success: false, message: 'Saldo tidak mencukupi' });
+        }
+
+        const result = await otpApi.createOrder(number_id, provider_id, operator_id);
+        
+        if (result.success) {
+            // Deduct balance
+            await db.updateUserBalance(user.id, user.balance - price);
+            
+            // Add transaction
+            await db.addTransaction({
+                userId: user.id,
+                type: 'purchase',
+                amount: -price,
+                status: 'completed',
+                description: `Beli OTP ${result.data.service} (${result.data.phone_number})`,
+                refId: result.data.order_id
+            });
+
+            // Add order
+            await db.addOrder({
+                userId: user.id,
+                username: user.username,
+                productType: 'OTP',
+                productId: result.data.order_id,
+                productName: `${result.data.service} - ${result.data.phone_number}`,
+                totalPrice: price,
+                status: 'processing'
+            });
+        }
+        
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.get('/otp/status/:order_id', async (req, res) => {
+    try {
+        const status = await otpApi.getStatus(req.params.order_id);
+        res.json(status);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+router.post('/otp/set-status', async (req, res) => {
+    try {
+        const { order_id, status } = req.body;
+        const result = await otpApi.setStatus(order_id, status);
+        
+        if (result.success && status === 'cancel') {
+            // Refund balance if canceled
+            const orders = await db.getOrders();
+            const order = orders.find(o => o.productId === order_id);
+            if (order && order.status !== 'cancelled') {
+                const users = await db.getUsers();
+                const user = users.find(u => u.id === order.userId);
+                await db.updateUserBalance(user.id, user.balance + order.totalPrice);
+                await db.updateOrder(order.id, { status: 'cancelled' });
+                
+                await db.addTransaction({
+                    userId: user.id,
+                    type: 'refund',
+                    amount: order.totalPrice,
+                    status: 'completed',
+                    description: `Refund OTP ${order.productName}`,
+                    refId: order_id
+                });
+            }
+        }
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
 
 /**
  * API Notification Route
@@ -70,9 +307,6 @@ router.post('/notify', async (req, res) => {
                   `📝 Info: ${data.message || 'No details'}`;
     }
 
-    // Send to Telegram Admin
-    await sendNotification(message);
-
     // Optional: Save to internal notifications log in sheets/db
     if (data.userId) {
       await db.addNotification({
@@ -84,7 +318,7 @@ router.post('/notify', async (req, res) => {
       }).catch(err => console.error('Failed to log notification to DB:', err));
     }
 
-    res.json({ success: true, message: 'Notification sent' });
+    res.json({ success: true, message: 'Notification logged' });
   } catch (error) {
     console.error('API Notify Error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });

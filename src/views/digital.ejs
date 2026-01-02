@@ -1,0 +1,242 @@
+<%- include('partials/header') %>
+
+<section class="py-6 px-4">
+    <div class="max-w-6xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-2xl font-bold flex items-center gap-3">
+                <i class="fas fa-bolt text-yellow-400"></i>
+                <span>Produk Digital</span>
+            </h1>
+            <div class="text-right">
+                <div class="text-xs text-gray-400">Saldo Anda</div>
+                <div class="text-lg font-bold text-green-400">Rp <%= user.balance.toLocaleString('id-ID') %></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <button onclick="loadProducts('Pulsa')" class="glass p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition group">
+                <i class="fas fa-mobile-alt text-3xl text-blue-400 group-hover:scale-110 transition"></i>
+                <span class="font-bold text-sm">Pulsa</span>
+            </button>
+            <button onclick="loadProducts('Data')" class="glass p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition group">
+                <i class="fas fa-wifi text-green-400 group-hover:scale-110 transition"></i>
+                <span class="font-bold text-sm">Paket Data</span>
+            </button>
+            <button onclick="loadProducts('PLN')" class="glass p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition group">
+                <i class="fas fa-lightbulb text-3xl text-yellow-400 group-hover:scale-110 transition"></i>
+                <span class="font-bold text-sm">Token PLN</span>
+            </button>
+            <button onclick="loadProducts('Games')" class="glass p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition group">
+                <i class="fas fa-gamepad text-3xl text-purple-400 group-hover:scale-110 transition"></i>
+                <span class="font-bold text-sm">Topup Game</span>
+            </button>
+            <button onclick="loadProducts('E-Money')" class="glass p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition group">
+                <i class="fas fa-wallet text-3xl text-orange-400 group-hover:scale-110 transition"></i>
+                <span class="font-bold text-sm">E-Money</span>
+            </button>
+        </div>
+
+        <div id="productSection" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <h2 id="categoryTitle" class="text-xl font-bold text-purple-400">Pilih Produk</h2>
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs"></i>
+                    <input type="text" id="digiSearch" placeholder="Cari produk..." class="bg-white/5 border border-white/10 rounded-xl py-2 pl-9 pr-4 text-xs focus:outline-none focus:ring-1 focus:ring-purple-500">
+                </div>
+            </div>
+            
+            <div id="digiProducts" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Products will load here -->
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Buy Modal -->
+<div id="buyModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-[#1a1a2e] border border-white/10 rounded-3xl w-full max-w-md overflow-hidden p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="font-bold text-lg">Konfirmasi Pembelian</h3>
+            <button onclick="closeBuyModal()" class="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="space-y-4 mb-8">
+            <div class="bg-white/5 rounded-2xl p-4">
+                <div id="modalProductName" class="font-bold text-lg mb-1">Nama Produk</div>
+                <div id="modalProductPrice" class="text-purple-400 font-bold">Rp 0</div>
+            </div>
+            
+            <div id="normalTarget">
+                <label class="block text-xs text-gray-400 mb-2" id="targetLabel">Nomor Tujuan / ID Pelanggan</label>
+                <input type="text" id="customerNo" placeholder="08123456789" class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500">
+            </div>
+
+            <div id="gameTarget" class="hidden grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-2">User ID</label>
+                    <input type="text" id="gameUserId" placeholder="12345678" class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-2">Server ID</label>
+                    <input type="text" id="gameServerId" placeholder="1234" class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="processTopup()" id="confirmBuyBtn" class="w-full btn-primary py-4 rounded-2xl font-bold">
+            Bayar Sekarang
+        </button>
+    </div>
+</div>
+
+<script>
+    let currentCategory = '';
+    let allProducts = [];
+    let selectedSku = '';
+    let selectedPrice = 0;
+
+    async function loadProducts(category) {
+        currentCategory = category;
+        const section = document.getElementById('productSection');
+        const list = document.getElementById('digiProducts');
+        const title = document.getElementById('categoryTitle');
+        
+        section.classList.remove('hidden');
+        title.innerText = category;
+        list.innerHTML = '<div class="col-span-full py-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin text-2xl mb-3"></i><br>Memuat produk...</div>';
+        
+        try {
+            const res = await fetch(`/api/digiflazz/products?category=${category}`);
+            const result = await res.json();
+            
+            if (result.success) {
+                allProducts = result.data;
+                renderProducts(allProducts);
+            } else {
+                list.innerHTML = `<div class="col-span-full py-10 text-center text-red-400">${result.message}</div>`;
+            }
+        } catch (e) {
+            list.innerHTML = '<div class="col-span-full py-10 text-center text-red-400">Gagal memuat produk.</div>';
+        }
+    }
+
+    function renderProducts(items) {
+        const list = document.getElementById('digiProducts');
+        list.innerHTML = items.map(p => `
+            <div class="glass p-4 rounded-2xl flex flex-col justify-between gap-4">
+                <div>
+                    <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">${p.brand}</div>
+                    <div class="font-bold text-sm leading-tight">${p.product_name}</div>
+                    <div class="text-xs text-gray-400 mt-1">${p.desc || 'No description'}</div>
+                </div>
+                <div class="flex items-center justify-between mt-4">
+                    <div class="text-purple-400 font-bold">Rp ${p.user_price.toLocaleString('id-ID')}</div>
+                    <button onclick="openBuyModal('${p.buyer_sku_code}', '${p.product_name}', ${p.user_price})" class="bg-purple-600/20 text-purple-400 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-purple-600 hover:text-white transition">Beli</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('digiSearch').addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        const filtered = allProducts.filter(p => 
+            p.product_name.toLowerCase().includes(query) || 
+            p.brand.toLowerCase().includes(query)
+        );
+        renderProducts(filtered);
+    });
+
+    function openBuyModal(sku, name, price) {
+        selectedSku = sku;
+        selectedPrice = price;
+        document.getElementById('modalProductName').innerText = name;
+        document.getElementById('modalProductPrice').innerText = 'Rp ' + price.toLocaleString('id-ID');
+        
+        const isGame = currentCategory === 'Games';
+        const normalTarget = document.getElementById('normalTarget');
+        const gameTarget = document.getElementById('gameTarget');
+        
+        if (isGame) {
+            normalTarget.classList.add('hidden');
+            gameTarget.classList.remove('hidden');
+        } else {
+            normalTarget.classList.remove('hidden');
+            gameTarget.classList.add('hidden');
+            
+            const targetLabel = document.getElementById('targetLabel');
+            if (currentCategory === 'PLN') {
+                targetLabel.innerText = 'Nomor Meter / ID Pelanggan';
+                document.getElementById('customerNo').placeholder = '12345678901';
+            } else {
+                targetLabel.innerText = 'Nomor Tujuan';
+                document.getElementById('customerNo').placeholder = '08123456789';
+            }
+        }
+        
+        document.getElementById('buyModal').classList.replace('hidden', 'flex');
+    }
+
+    function closeBuyModal() {
+        document.getElementById('buyModal').classList.replace('flex', 'hidden');
+    }
+
+    async function processTopup() {
+        let customerNo = '';
+        const isGame = currentCategory === 'Games';
+        
+        if (isGame) {
+            const userId = document.getElementById('gameUserId').value;
+            const serverId = document.getElementById('gameServerId').value;
+            if (!userId || !serverId) return alert('Masukkan ID Game dan Server ID!');
+            customerNo = `${userId}(${serverId})`;
+        } else {
+            customerNo = document.getElementById('customerNo').value;
+            if (!customerNo) return alert('Masukkan nomor tujuan!');
+        }
+        
+        const btn = document.getElementById('confirmBuyBtn');
+        btn.disabled = true;
+        btn.innerText = 'Memproses...';
+        
+        try {
+            const res = await fetch('/api/digiflazz/topup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sku: selectedSku,
+                    customerNo: customerNo,
+                    price: selectedPrice
+                })
+            });
+            const result = await res.json();
+            
+            if (result.success) {
+                Swal.fire({
+                    title: 'Berhasil!',
+                    text: 'Transaksi Berhasil/Diproses! Cek riwayat transaksi.',
+                    icon: 'success',
+                    confirmButtonText: 'Oke',
+                    background: '#1a1a2e',
+                    color: '#fff',
+                    customClass: {
+                        popup: 'glass-card rounded-3xl',
+                        confirmButton: 'btn-primary px-8 py-3 rounded-xl'
+                    }
+                }).then(() => {
+                    location.href = '/profile/transactions';
+                });
+            } else {
+                showAlert('Gagal', result.message, 'error');
+            }
+        } catch (e) {
+            showAlert('Error', 'Terjadi kesalahan sistem', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerText = 'Bayar Sekarang';
+        }
+    }
+</script>
+
+<%- include('partials/footer') %>
