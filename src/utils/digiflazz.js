@@ -20,7 +20,7 @@ let priceListCache = {
     timestamp: 0
 };
 
-const CACHE_DURATION = 30 * 60 * 1000; // 30 menit (diperpanjang dari 5 menit untuk hindari rate limit)
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 jam untuk menghindari rate limit API pricelist
 
 const digiflazz = {
     generateSign: (username, apikey, cmd) => {
@@ -30,7 +30,7 @@ const digiflazz = {
     getSaldo: async () => {
         const config = await getDigiflazzConfig();
         const sign = digiflazz.generateSign(config.username, config.apikey, 'depo');
-        const response = await axios.post('https://api.digiflazz.com/v1/cek-saldo', {
+        const response = await axios.post('https://api-proxy.baeci-host.xyz/v1/cek-saldo', {
             cmd: 'deposit',
             username: config.username,
             sign: sign
@@ -59,10 +59,15 @@ const digiflazz = {
                 if (settings.digiflazz_cache && settings.digiflazz_cache_time) {
                     const cacheTime = parseInt(settings.digiflazz_cache_time);
                     if (now - cacheTime < CACHE_DURATION) {
-                        console.log('[Digiflazz] Using database cached price list');
-                        priceListCache.data = settings.digiflazz_cache;
-                        priceListCache.timestamp = cacheTime;
-                        return { data: settings.digiflazz_cache };
+                        const rawCache = settings.digiflazz_cache;
+                        const dataToCache = Array.isArray(rawCache) ? rawCache : (rawCache.data || []);
+                        
+                        if (dataToCache.length > 0) {
+                            console.log('[Digiflazz] Using database cached price list');
+                            priceListCache.data = dataToCache;
+                            priceListCache.timestamp = cacheTime;
+                            return { data: dataToCache };
+                        }
                     }
                 }
             } catch (e) {
@@ -73,7 +78,7 @@ const digiflazz = {
         console.log('[Digiflazz] Fetching fresh price list from API...');
         const sign = digiflazz.generateSign(config.username, config.apikey, 'pricelist');
         try {
-            const response = await axios.post('https://api.digiflazz.com/v1/price-list', {
+            const response = await axios.post('https://api-proxy.baeci-host.xyz/v1/price-list', {
                 cmd: 'prepaid',
                 username: config.username,
                 sign: sign
@@ -145,7 +150,7 @@ const digiflazz = {
         });
         
         try {
-            const response = await axios.post('https://api.digiflazz.com/v1/transaction', payload, {
+            const response = await axios.post('https://api-proxy.baeci-host.xyz/v1/transaction', payload, {
                 headers: {
                     'Content-Type': 'application/json'
                 }

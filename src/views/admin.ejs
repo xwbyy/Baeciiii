@@ -84,6 +84,9 @@
         <button onclick="showTab('digiflazz')" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap" data-tab="digiflazz">
           <i class="fas fa-mobile-alt mr-1 sm:mr-2"></i>Digiflazz
         </button>
+        <button onclick="showTab('system')" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap" data-tab="system">
+          <i class="fas fa-network-wired mr-1 sm:mr-2"></i>System IP
+        </button>
         <button onclick="showTab('vouchers')" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs font-medium whitespace-nowrap" data-tab="vouchers">
           <i class="fas fa-ticket-alt mr-1 sm:mr-2"></i>Voucher
         </button>
@@ -374,6 +377,34 @@
       </div>
     </div>
 
+    <div id="systemTab" class="tab-content hidden">
+      <div class="glass-card rounded-xl p-3 sm:p-5">
+        <h3 class="font-semibold text-sm mb-3">System Information</h3>
+        <div class="space-y-4">
+          <div class="glass rounded-lg p-4">
+            <label class="block text-xs text-gray-400 mb-2">Outbound IP Address (Whitelist this on Digiflazz)</label>
+            <div class="flex items-center gap-2">
+              <input type="text" id="systemIpDisplay" readonly class="flex-1 input-glass rounded-lg py-2 px-3 text-sm font-mono text-purple-400" value="Loading...">
+              <button onclick="copySystemIp()" class="bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-lg transition">
+                <i class="fas fa-copy"></i>
+              </button>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-2">
+              <i class="fas fa-info-circle mr-1"></i>
+              Ini adalah alamat IP server saat ini. Masukkan IP ini ke daftar whitelist di Dashboard Digiflazz.
+            </p>
+          </div>
+          
+          <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
+            <p class="text-xs text-yellow-400">
+              <i class="fas fa-exclamation-triangle mr-1"></i>
+              <strong>Penting:</strong> IP outbound pada layanan cloud (seperti Vercel atau Replit) dapat berubah sewaktu-waktu. Jika transaksi gagal dengan error IP, silakan periksa kembali IP di sini dan update whitelist Digiflazz Anda.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="vouchersTab" class="tab-content hidden">
       <div class="glass-card rounded-xl p-3 sm:p-5 mb-4">
         <h3 class="font-semibold text-sm mb-3">Tambah Voucher Baru</h3>
@@ -452,11 +483,17 @@
     </div>
     
     <div id="digiflazzTab" class="tab-content hidden">
-      <div class="glass-card rounded-xl p-3 sm:p-5">
-        <h3 class="font-semibold text-sm flex items-center gap-2 mb-3">
-          <i class="fas fa-mobile-alt text-blue-400"></i>
-          Digiflazz Configuration
-        </h3>
+      <div class="glass-card rounded-xl p-3 sm:p-5 mb-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-sm flex items-center gap-2">
+            <i class="fas fa-mobile-alt text-blue-400"></i>
+            Digiflazz Configuration
+          </h3>
+          <button onclick="syncDigiflazz()" id="syncBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition shadow-lg shadow-blue-500/20">
+            <i class="fas fa-sync-alt"></i>
+            <span>Sinkron Produk</span>
+          </button>
+        </div>
         <form id="digiflazzSettingsForm" class="space-y-3">
           <div>
             <label class="block text-xs text-gray-400 mb-1">Username Digiflazz</label>
@@ -1042,6 +1079,81 @@
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-plug mr-1"></i>Test Koneksi';
   }
+
+  async function syncDigiflazz() {
+    const btn = document.getElementById('syncBtn');
+    const originalContent = btn.innerHTML;
+    if (!confirm('Apakah Anda yakin ingin sinkronisasi produk dari Digiflazz? Proses ini mungkin memakan waktu.')) return;
+    
+    try {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Syncing...';
+      
+      const res = await fetch('/admin/api/digiflazz/sync');
+      const data = await res.json();
+      
+      if (data.success) {
+        alert(data.message);
+        location.reload();
+      } else {
+        alert('Gagal: ' + data.message);
+      }
+    } catch (error) {
+      alert('Error: ' + error.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalContent;
+    }
+  }
+
+  async function loadSystemIp() {
+    const display = document.getElementById('systemIpDisplay');
+    try {
+      display.value = 'Fetching...';
+      const res = await fetch('/admin/api/system-ip');
+      const data = await res.json();
+      if (data.success) {
+        display.value = data.ip;
+      } else {
+        display.value = 'Gagal mengambil IP';
+      }
+    } catch (error) {
+      display.value = 'Error koneksi';
+    }
+  }
+
+  function copySystemIp() {
+    const ipInput = document.getElementById('systemIpDisplay');
+    if (ipInput.value === 'Loading...' || ipInput.value.includes('Gagal')) return;
+    
+    ipInput.select();
+    document.execCommand('copy');
+    
+    const btn = event.currentTarget;
+    const icon = btn.querySelector('i');
+    icon.className = 'fas fa-check';
+    setTimeout(() => {
+      icon.className = 'fas fa-copy';
+    }, 2000);
+  }
+
+  // Intercept showTab to load IP
+  const originalShowTab = window.showTab;
+  window.showTab = function(tabName) {
+    if (typeof originalShowTab === 'function') {
+      originalShowTab(tabName);
+    } else {
+      // Fallback if original not found (though it should be global)
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+      document.getElementById(tabName + 'Tab').classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+    }
+    
+    if (tabName === 'system') {
+      loadSystemIp();
+    }
+  };
 
     // Broadcast Form
     const broadcastForm = document.getElementById('broadcastForm');

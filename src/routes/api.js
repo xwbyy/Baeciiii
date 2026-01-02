@@ -23,20 +23,28 @@ router.get('/digiflazz/products', async (req, res) => {
             let filtered = finalData;
             if (category) {
                 // Mapping category for Digiflazz compatibility
-                let searchCategory = category;
-                if (category === 'Games') searchCategory = 'Games';
-                if (category === 'PLN') searchCategory = 'PLN';
-                if (category === 'Pulsa') searchCategory = 'Pulsa';
-                if (category === 'Data') searchCategory = 'Data';
+                const catLower = category.toLowerCase();
                 
-                filtered = rawData.filter(p => {
-                    // Check for main category
-                    if (p.category === searchCategory) return true;
-                    // Check for games sub-categories if main category is Games
-                    if (category === 'Games' && (p.category.includes('Games') || p.category.includes('Voucher'))) return true;
-                    // Check for e-money etc
-                    if (category === 'E-Money' && p.category.includes('E-Money')) return true;
-                    return false;
+                filtered = finalData.filter(p => {
+                    const prodCat = (p.category || '').toLowerCase();
+                    
+                    if (catLower === 'games' || catLower === 'game') {
+                        return prodCat.includes('game') || prodCat.includes('voucher');
+                    }
+                    if (catLower === 'emoney' || catLower === 'e-money') {
+                        return prodCat.includes('e-money') || prodCat.includes('saldo');
+                    }
+                    if (catLower === 'pln') {
+                        return prodCat.includes('pln');
+                    }
+                    if (catLower === 'pulsa') {
+                        return prodCat.includes('pulsa');
+                    }
+                    if (catLower === 'data') {
+                        return prodCat.includes('data') || prodCat.includes('internet');
+                    }
+                    
+                    return prodCat === catLower;
                 });
             }
             
@@ -77,6 +85,8 @@ router.post('/digiflazz/topup', async (req, res) => {
             if (data.status !== 'Gagal') {
                 await db.updateUserBalance(user.id, user.balance - price);
                 
+                // Jika statusnya 'Sukses' langsung dari API (biasanya inquiry/cek), set completed
+                // Jika tidak, biarkan 'processing' menunggu callback
                 const finalStatus = data.status === 'Sukses' ? 'completed' : 'processing';
                 
                 await db.addTransaction({

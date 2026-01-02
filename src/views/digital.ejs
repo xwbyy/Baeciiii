@@ -7,36 +7,20 @@
                 <i class="fas fa-bolt text-yellow-400"></i>
                 <span>Produk Digital</span>
             </h1>
-            <div class="text-right">
-                <div class="text-xs text-gray-400">Saldo Anda</div>
-                <div class="text-lg font-bold text-green-400">Rp <%= user.balance.toLocaleString('id-ID') %></div>
+        </div>
+
+        <!-- Brand/Sub-category Selection (Always visible, powered by query param) -->
+        <div id="brandSection" class="mb-8 fade-in">
+            <h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-th-large text-purple-400"></i>
+                <span id="brandTitle">Pilih Provider</span>
+            </h2>
+            <div id="brandList" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                <!-- Brands will load here -->
             </div>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-            <button onclick="loadProducts('Pulsa')" class="glass p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition group">
-                <i class="fas fa-mobile-alt text-3xl text-blue-400 group-hover:scale-110 transition"></i>
-                <span class="font-bold text-sm">Pulsa</span>
-            </button>
-            <button onclick="loadProducts('Data')" class="glass p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition group">
-                <i class="fas fa-wifi text-green-400 group-hover:scale-110 transition"></i>
-                <span class="font-bold text-sm">Paket Data</span>
-            </button>
-            <button onclick="loadProducts('PLN')" class="glass p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition group">
-                <i class="fas fa-lightbulb text-3xl text-yellow-400 group-hover:scale-110 transition"></i>
-                <span class="font-bold text-sm">Token PLN</span>
-            </button>
-            <button onclick="loadProducts('Games')" class="glass p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition group">
-                <i class="fas fa-gamepad text-3xl text-purple-400 group-hover:scale-110 transition"></i>
-                <span class="font-bold text-sm">Topup Game</span>
-            </button>
-            <button onclick="loadProducts('E-Money')" class="glass p-6 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition group">
-                <i class="fas fa-wallet text-3xl text-orange-400 group-hover:scale-110 transition"></i>
-                <span class="font-bold text-sm">E-Money</span>
-            </button>
-        </div>
-
-        <div id="productSection" class="hidden space-y-6">
+        <div id="productSection" class="hidden space-y-6 fade-in">
             <div class="flex items-center justify-between">
                 <h2 id="categoryTitle" class="text-xl font-bold text-purple-400">Pilih Produk</h2>
                 <div class="relative">
@@ -92,20 +76,38 @@
 </div>
 
 <script>
-    let currentCategory = '';
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentCategory = urlParams.get('category') || 'Pulsa';
     let allProducts = [];
     let selectedSku = '';
     let selectedPrice = 0;
 
-    async function loadProducts(category) {
+    // Auto load on start
+    window.addEventListener('DOMContentLoaded', () => {
+        selectCategory(currentCategory);
+    });
+
+    async function selectCategory(category) {
         currentCategory = category;
-        const section = document.getElementById('productSection');
-        const list = document.getElementById('digiProducts');
-        const title = document.getElementById('categoryTitle');
+        const brandSection = document.getElementById('brandSection');
+        const productSection = document.getElementById('productSection');
+        const brandList = document.getElementById('brandList');
+        const brandTitle = document.getElementById('brandTitle');
         
-        section.classList.remove('hidden');
-        title.innerText = category;
-        list.innerHTML = '<div class="col-span-full py-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin text-2xl mb-3"></i><br>Memuat produk...</div>';
+        brandSection.classList.remove('hidden');
+        productSection.classList.add('hidden');
+        
+        // Pretty display name
+        let displayName = category;
+        const catLower = category.toLowerCase();
+        if(catLower === 'pulsa') displayName = 'Pulsa';
+        if(catLower === 'data') displayName = 'Paket Data';
+        if(catLower === 'pln') displayName = 'Token PLN';
+        if(catLower === 'game') displayName = 'Topup Game';
+        if(catLower === 'emoney') displayName = 'E-Money';
+
+        brandTitle.innerText = `Pilih Provider ${displayName}`;
+        brandList.innerHTML = '<div class="col-span-full py-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin text-2xl mb-3"></i><br>Memuat provider...</div>';
         
         try {
             const res = await fetch(`/api/digiflazz/products?category=${category}`);
@@ -113,27 +115,55 @@
             
             if (result.success) {
                 allProducts = result.data;
-                renderProducts(allProducts);
+                // Group by brand
+                const brands = [...new Set(allProducts.map(p => p.brand))].sort();
+                
+                if (brands.length === 0) {
+                    brandList.innerHTML = `<div class="col-span-full py-10 text-center text-gray-400">Tidak ada provider ditemukan untuk kategori ini.</div>`;
+                    return;
+                }
+
+                brandList.innerHTML = brands.map(brand => `
+                    <button onclick="filterByBrand('${brand}')" class="glass p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition group border border-white/5">
+                        <div class="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center font-bold text-xs text-purple-400 group-hover:scale-110 transition text-center overflow-hidden">
+                            ${brand.charAt(0)}
+                        </div>
+                        <span class="text-[10px] font-bold text-center leading-tight">${brand}</span>
+                    </button>
+                `).join('');
             } else {
-                list.innerHTML = `<div class="col-span-full py-10 text-center text-red-400">${result.message}</div>`;
+                brandList.innerHTML = `<div class="col-span-full py-10 text-center text-red-400">${result.message}</div>`;
             }
         } catch (e) {
-            list.innerHTML = '<div class="col-span-full py-10 text-center text-red-400">Gagal memuat produk.</div>';
+            brandList.innerHTML = '<div class="col-span-full py-10 text-center text-red-400">Gagal memuat provider.</div>';
         }
+    }
+
+    function filterByBrand(brand) {
+        const filtered = allProducts.filter(p => p.brand === brand);
+        const section = document.getElementById('productSection');
+        const title = document.getElementById('categoryTitle');
+        
+        section.classList.remove('hidden');
+        title.innerText = brand;
+        renderProducts(filtered);
+        
+        // Scroll to products
+        section.scrollIntoView({ behavior: 'smooth' });
     }
 
     function renderProducts(items) {
         const list = document.getElementById('digiProducts');
         list.innerHTML = items.map(p => `
-            <div class="glass p-4 rounded-2xl flex flex-col justify-between gap-4">
+            <div class="glass p-4 rounded-2xl flex flex-col justify-between gap-4 border border-white/5 hover:border-purple-500/30 transition-all">
                 <div>
-                    <div class="text-[10px] text-gray-500 uppercase font-bold mb-1">${p.brand}</div>
-                    <div class="font-bold text-sm leading-tight">${p.product_name}</div>
-                    <div class="text-xs text-gray-400 mt-1">${p.desc || 'No description'}</div>
+                    <div class="text-[10px] text-purple-400 uppercase font-bold mb-1 tracking-wider">${p.brand}</div>
+                    <div class="font-bold text-sm leading-tight text-white">${p.product_name}</div>
+                    <div class="text-[10px] text-gray-500 mt-1 line-clamp-2">${p.desc || 'Tanpa deskripsi'}</div>
                 </div>
-                <div class="flex items-center justify-between mt-4">
-                    <div class="text-purple-400 font-bold">Rp ${p.user_price.toLocaleString('id-ID')}</div>
-                    <button onclick="openBuyModal('${p.buyer_sku_code}', '${p.product_name}', ${p.user_price})" class="bg-purple-600/20 text-purple-400 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-purple-600 hover:text-white transition">Beli</button>
+                <div class="flex items-center justify-between mt-4 pt-4 border-t border-white/5">
+                    <div class="text-green-400 font-bold text-sm">Rp ${p.user_price.toLocaleString('id-ID')}</div>
+                    <button onclick="openBuyModal('${p.buyer_sku_code}', '${p.product_name}', ${p.user_price})" class="btn-primary px-4 py-1.5 rounded-lg text-[10px] font-bold shadow-lg shadow-purple-500/20">Beli</button>
                 </div>
             </div>
         `).join('');
@@ -141,9 +171,10 @@
 
     document.getElementById('digiSearch').addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase();
-        const filtered = allProducts.filter(p => 
-            p.product_name.toLowerCase().includes(query) || 
-            p.brand.toLowerCase().includes(query)
+        const brandName = document.getElementById('categoryTitle').innerText;
+        const brandFiltered = allProducts.filter(p => p.brand === brandName);
+        const filtered = brandFiltered.filter(p => 
+            p.product_name.toLowerCase().includes(query)
         );
         renderProducts(filtered);
     });
@@ -154,7 +185,7 @@
         document.getElementById('modalProductName').innerText = name;
         document.getElementById('modalProductPrice').innerText = 'Rp ' + price.toLocaleString('id-ID');
         
-        const isGame = currentCategory === 'Games';
+        const isGame = currentCategory === 'game' || currentCategory === 'Games';
         const normalTarget = document.getElementById('normalTarget');
         const gameTarget = document.getElementById('gameTarget');
         
@@ -166,7 +197,7 @@
             gameTarget.classList.add('hidden');
             
             const targetLabel = document.getElementById('targetLabel');
-            if (currentCategory === 'PLN') {
+            if (currentCategory === 'pln' || currentCategory === 'PLN') {
                 targetLabel.innerText = 'Nomor Meter / ID Pelanggan';
                 document.getElementById('customerNo').placeholder = '12345678901';
             } else {
@@ -184,7 +215,7 @@
 
     async function processTopup() {
         let customerNo = '';
-        const isGame = currentCategory === 'Games';
+        const isGame = currentCategory === 'game' || currentCategory === 'Games';
         
         if (isGame) {
             const userId = document.getElementById('gameUserId').value;

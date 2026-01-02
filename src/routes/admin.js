@@ -411,6 +411,33 @@ router.get('/servers/:id', isAdmin, async (req, res) => {
   }
 });
 
+router.get('/api/digiflazz/sync', isAdmin, async (req, res) => {
+  try {
+    const digiflazz = require('../utils/digiflazz');
+    const db = require('../utils/sheetsDb');
+    const result = await digiflazz.getPriceList(true);
+    
+    if (result && result.data && Array.isArray(result.data)) {
+      res.json({ success: true, message: `Berhasil sinkron ${result.data.length} produk` });
+    } else {
+      res.json({ success: false, message: 'Gagal mengambil data dari Digiflazz' });
+    }
+  } catch (error) {
+    console.error('Sync Digiflazz Error:', error);
+    res.json({ success: false, message: error.message });
+  }
+});
+
+router.get('/api/system-ip', isAdmin, async (req, res) => {
+  try {
+    const axios = require('axios');
+    const response = await axios.get('https://api.ipify.org?format=json');
+    res.json({ success: true, ip: response.data.ip });
+  } catch (error) {
+    res.json({ success: false, message: 'Gagal mengambil IP' });
+  }
+});
+
 router.post('/settings', isAdmin, async (req, res) => {
   try {
     const settings = req.body;
