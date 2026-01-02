@@ -30,7 +30,7 @@ const digiflazz = {
     getSaldo: async () => {
         const config = await getDigiflazzConfig();
         const sign = digiflazz.generateSign(config.username, config.apikey, 'depo');
-        const response = await axios.post('https://baecihost.vynaachan.workers.dev/v1/cek-saldo', {
+        const response = await axios.post('https://api.digiflazz.com/v1/cek-saldo', {
             cmd: 'deposit',
             username: config.username,
             sign: sign
@@ -78,7 +78,7 @@ const digiflazz = {
         console.log('[Digiflazz] Fetching fresh price list from API...');
         const sign = digiflazz.generateSign(config.username, config.apikey, 'pricelist');
         try {
-            const response = await axios.post('https://baecihost.vynaachan.workers.dev/v1/price-list', {
+            const response = await axios.post('https://api.digiflazz.com/v1/price-list', {
                 cmd: 'prepaid',
                 username: config.username,
                 sign: sign
@@ -150,7 +150,7 @@ const digiflazz = {
         });
         
         try {
-            const response = await axios.post('https://baecihost.vynaachan.workers.dev/v1/transaction', payload, {
+            const response = await axios.post('https://api.digiflazz.com/v1/transaction', payload, {
                 headers: {
                     'Content-Type': 'application/json'
                 }
