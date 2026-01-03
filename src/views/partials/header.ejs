@@ -326,79 +326,77 @@
   
   <div id="mobileMenuOverlay" class="mobile-menu-overlay fixed inset-0 z-40 md:hidden"></div>
   
-  <div id="mobileMenu" class="mobile-menu fixed top-0 right-0 bottom-0 w-72 z-50 md:hidden">
-    <div class="flex flex-col h-full">
-      <div class="flex items-center justify-between p-4 border-b border-white/10">
-        <span class="font-semibold text-sm">Menu</span>
-        <button id="closeMobileMenu" class="w-8 h-8 rounded-full glass flex items-center justify-center">
-          <i class="fas fa-times text-sm"></i>
-        </button>
-      </div>
+  <div id="mobileMenu" class="mobile-menu fixed top-0 right-0 bottom-0 w-72 z-50 md:hidden flex flex-col">
+    <div class="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
+      <span class="font-semibold text-sm">Menu</span>
+      <button id="closeMobileMenu" class="w-8 h-8 rounded-full glass flex items-center justify-center">
+        <i class="fas fa-times text-sm"></i>
+      </button>
+    </div>
+    
+    <div class="flex-1 overflow-y-auto p-4 space-y-2 mobile-menu-content pb-20">
+      <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+        <i class="fas fa-home text-purple-400 w-5 text-center"></i>
+        <span class="text-sm font-medium">Beranda</span>
+      </a>
+      <a href="/server" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+        <i class="fas fa-server text-purple-400 w-5 text-center"></i>
+        <span class="text-sm font-medium">Server Panel</span>
+      </a>
+      <a href="/products" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+        <i class="fas fa-box text-purple-400 w-5 text-center"></i>
+        <span class="text-sm font-medium">Produk Digital</span>
+      </a>
+      <a href="/otp" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+        <i class="fas fa-sms text-yellow-400 w-5 text-center"></i>
+        <span class="text-sm font-medium">Beli OTP</span>
+      </a>
+      <a href="/digital" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+        <i class="fas fa-bolt text-yellow-400 w-5 text-center"></i>
+        <span class="text-sm font-medium">Topup & Pulsa</span>
+      </a>
       
-      <div class="flex-1 overflow-y-auto p-4 space-y-2 mobile-menu-content">
-        <a href="/" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
-          <i class="fas fa-home text-purple-400 w-5 text-center"></i>
-          <span class="text-sm font-medium">Beranda</span>
+      <% if (user) { %>
+        <div class="border-t border-white/10 my-3 pt-3 flex-shrink-0">
+          <div class="px-4 py-2 text-xs text-gray-500 uppercase tracking-wider">Akun Saya</div>
+        </div>
+        <a href="/deposit" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+          <i class="fas fa-wallet text-green-400 w-5 text-center"></i>
+          <span class="text-sm font-medium">Deposit Saldo</span>
         </a>
-        <a href="/server" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
-          <i class="fas fa-server text-purple-400 w-5 text-center"></i>
-          <span class="text-sm font-medium">Server Panel</span>
+        <a href="/profile/transactions" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+          <i class="fas fa-receipt text-blue-400 w-5 text-center"></i>
+          <span class="text-sm font-medium">Riwayat Transaksi</span>
         </a>
-        <a href="/products" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
-          <i class="fas fa-box text-purple-400 w-5 text-center"></i>
-          <span class="text-sm font-medium">Produk Digital</span>
+        <a href="/profile/orders" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+          <i class="fas fa-shopping-bag text-orange-400 w-5 text-center"></i>
+          <span class="text-sm font-medium">Pesanan Saya</span>
         </a>
-        <a href="/otp" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
-          <i class="fas fa-sms text-yellow-400 w-5 text-center"></i>
-          <span class="text-sm font-medium">Beli OTP</span>
+        <a href="/profile" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+          <i class="fas fa-user text-purple-400 w-5 text-center"></i>
+          <span class="text-sm font-medium">Profil</span>
         </a>
-        <a href="/digital" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
-          <i class="fas fa-bolt text-yellow-400 w-5 text-center"></i>
-          <span class="text-sm font-medium">Topup & Pulsa</span>
-        </a>
-        
-        <% if (user) { %>
-          <div class="border-t border-white/10 my-3 pt-3">
-            <div class="px-4 py-2 text-xs text-gray-500 uppercase tracking-wider">Akun Saya</div>
-          </div>
-          <a href="/deposit" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
-            <i class="fas fa-wallet text-green-400 w-5 text-center"></i>
-            <span class="text-sm font-medium">Deposit Saldo</span>
-          </a>
-          <a href="/profile/transactions" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
-            <i class="fas fa-receipt text-blue-400 w-5 text-center"></i>
-            <span class="text-sm font-medium">Riwayat Transaksi</span>
-          </a>
-          <a href="/profile/orders" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
-            <i class="fas fa-shopping-bag text-orange-400 w-5 text-center"></i>
-            <span class="text-sm font-medium">Pesanan Saya</span>
-          </a>
-          <a href="/profile" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
-            <i class="fas fa-user text-purple-400 w-5 text-center"></i>
-            <span class="text-sm font-medium">Profil</span>
-          </a>
-          <% if (isAdmin) { %>
-            <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 transition">
-              <i class="fas fa-cog text-purple-400 w-5 text-center"></i>
-              <span class="text-sm font-medium">Admin Dashboard</span>
-            </a>
-          <% } %>
-          <a href="/auth/logout" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-red-500/10 transition text-red-400">
-            <i class="fas fa-sign-out-alt w-5 text-center"></i>
-            <span class="text-sm font-medium">Keluar</span>
-          </a>
-        <% } else { %>
-          <div class="border-t border-white/10 my-3 pt-3"></div>
-          <a href="/auth/login" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
-            <i class="fas fa-sign-in-alt text-purple-400 w-5 text-center"></i>
-            <span class="text-sm font-medium">Masuk</span>
-          </a>
-          <a href="/auth/register" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl btn-primary">
-            <i class="fas fa-user-plus"></i>
-            <span class="text-sm font-medium">Daftar Sekarang</span>
+        <% if (isAdmin) { %>
+          <a href="/admin" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 transition">
+            <i class="fas fa-cog text-purple-400 w-5 text-center"></i>
+            <span class="text-sm font-medium">Admin Dashboard</span>
           </a>
         <% } %>
-      </div>
+        <a href="/auth/logout" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-red-500/10 transition text-red-400">
+          <i class="fas fa-sign-out-alt w-5 text-center"></i>
+          <span class="text-sm font-medium">Keluar</span>
+        </a>
+      <% } else { %>
+        <div class="border-t border-white/10 my-3 pt-3 flex-shrink-0"></div>
+        <a href="/auth/login" class="flex items-center gap-3 px-4 py-3 rounded-xl glass hover:bg-white/10 transition">
+          <i class="fas fa-sign-in-alt text-purple-400 w-5 text-center"></i>
+          <span class="text-sm font-medium">Masuk</span>
+        </a>
+        <a href="/auth/register" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl btn-primary">
+          <i class="fas fa-user-plus"></i>
+          <span class="text-sm font-medium">Daftar Sekarang</span>
+        </a>
+      <% } %>
     </div>
   </div>
   
