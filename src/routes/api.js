@@ -336,6 +336,58 @@ router.post('/notify', async (req, res) => {
 });
 
 /**
+ * TokoPay Callback Webhook
+ * Handle asynchronous payment notifications
+ */
+router.post('/webhook/tokopay', async (req, res) => {
+    try {
+        const { merchant_id, ref_id, status, amount, signature } = req.body;
+        const settings = await db.getSettings();
+        const tokopaySettings = settings.tokopay || {};
+        
+        // Basic verification (can be improved with HMAC if provided by TokoPay docs)
+        if (merchant_id !== tokopaySettings.merchant_id) {
+            return res.status(403).json({ status: 'error', message: 'Invalid merchant' });
+        }
+
+        if (status === 'Paid' || status === 'Success') {
+            const transactions = await db.getTransactions();
+            const transaction = transactions.find(t => t.refId === ref_id);
+
+            if (transaction && transaction.status === 'pending') {
+                await db.updateTransaction(transaction.id, { status: 'completed' });
+
+                const users = await db.getUsers();
+                const user = users.find(u => u.id === transaction.userId);
+                
+                if (user) {
+                    const newBalance = user.balance + transaction.amount;
+                    await db.updateUserBalance(user.id, newBalance);
+
+                    // Notify public activity
+                    const domain = process.env.DOMAIN || `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`;
+                    const axios = require('axios');
+                    await axios.post(`${domain}/api/notify`, {
+                        type: 'deposit_success',
+                        data: {
+                            userId: user.id,
+                            username: user.username,
+                            amount: transaction.amount,
+                            newBalance: newBalance
+                        }
+                    }).catch(err => console.error('Webhook notify error:', err.message));
+                }
+            }
+        }
+
+        res.json({ status: 'ok' });
+    } catch (error) {
+        console.error('TokoPay Webhook Error:', error);
+        res.status(500).json({ status: 'error' });
+    }
+});
+
+/**
  * Public Activity API
  * Returns latest activities/notifications in JSON format
  */
