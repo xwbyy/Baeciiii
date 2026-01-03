@@ -195,6 +195,24 @@ router.post('/purchase', isAuthenticated, async (req, res) => {
       serverDetails: orderDetails
     });
 
+    // Notify public activity
+    try {
+      const axios = require('axios');
+      const domain = process.env.DOMAIN || 'http://localhost:5000';
+      await axios.post(`${domain}/api/notify`, {
+        type: 'server_buy',
+        data: { 
+          userId: user.id, 
+          username: user.username, 
+          planName: serverName || server.name,
+          price: totalPrice,
+          duration: durationText[duration] || '1 Bulan'
+        }
+      });
+    } catch (e) {
+      console.error('Failed to notify server purchase:', e.message);
+    }
+
     await db.addTransaction({
       userId: user.id,
       type: 'purchase',

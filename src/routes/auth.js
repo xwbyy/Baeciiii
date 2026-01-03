@@ -109,6 +109,18 @@ router.post('/register', isGuest, async (req, res) => {
       referralCode
     });
 
+    // Notify public activity
+    try {
+      const axios = require('axios');
+      const domain = process.env.DOMAIN || 'http://localhost:5000';
+      await axios.post(`${domain}/api/notify`, {
+        type: 'new_user',
+        data: { userId, username, email }
+      });
+    } catch (e) {
+      console.error('Failed to notify new user registration:', e.message);
+    }
+
     if (req.body.referredBy) {
       const users = await db.getUsers();
       const referrer = users.find(u => u.referralCode === req.body.referredBy.toUpperCase());

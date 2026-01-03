@@ -335,4 +335,34 @@ router.post('/notify', async (req, res) => {
   }
 });
 
+/**
+ * Public Activity API
+ * Returns latest activities/notifications in JSON format
+ */
+router.get('/notify', async (req, res) => {
+  try {
+    const notifications = await db.getNotifications();
+    // Sort by latest and limit to 50
+    const latest = notifications
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 50)
+      .map(n => ({
+        id: n.id,
+        type: n.type,
+        title: n.title,
+        message: n.message,
+        createdAt: n.createdAt
+      }));
+
+    res.json({
+      success: true,
+      total: latest.length,
+      data: latest
+    });
+  } catch (error) {
+    console.error('GET API Notify Error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 module.exports = router;

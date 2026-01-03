@@ -125,6 +125,24 @@ router.post('/buy/:id', isAuthenticated, async (req, res) => {
       status: 'completed'
     });
 
+    // Notify public activity
+    try {
+      const axios = require('axios');
+      const domain = process.env.DOMAIN || 'http://localhost:5000';
+      await axios.post(`${domain}/api/notify`, {
+        type: 'new_order',
+        data: { 
+          userId: user.id, 
+          username: user.username, 
+          productName: product.name,
+          price: totalPrice,
+          paymentMethod: 'Saldo'
+        }
+      });
+    } catch (e) {
+      console.error('Failed to notify product order:', e.message);
+    }
+
     await db.addTransaction({
       userId: user.id,
       type: 'purchase',

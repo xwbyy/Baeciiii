@@ -56,6 +56,23 @@ router.post('/create', isAuthenticated, async (req, res) => {
       refId
     });
 
+    // Notify public activity (request)
+    try {
+      const axios = require('axios');
+      const domain = process.env.DOMAIN || 'http://localhost:5000';
+      await axios.post(`${domain}/api/notify`, {
+        type: 'deposit_request',
+        data: { 
+          userId: req.session.user.id, 
+          username: req.session.user.username, 
+          amount: nominal,
+          method: method
+        }
+      });
+    } catch (e) {
+      console.error('Failed to notify deposit request:', e.message);
+    }
+
     res.json({
       success: true,
       data: {
@@ -112,6 +129,23 @@ router.get('/check/:refId', isAuthenticated, async (req, res) => {
         await db.updateUserBalance(user.id, newBalance);
         req.session.user.balance = newBalance;
         console.log('Balance updated to:', newBalance);
+
+        // Notify public activity (success)
+        try {
+          const axios = require('axios');
+          const domain = process.env.DOMAIN || 'http://localhost:5000';
+          await axios.post(`${domain}/api/notify`, {
+            type: 'deposit_success',
+            data: { 
+              userId: user.id, 
+              username: user.username, 
+              amount: transaction.amount,
+              newBalance: newBalance
+            }
+          });
+        } catch (e) {
+          console.error('Failed to notify deposit success:', e.message);
+        }
       }
 
       return res.json({ 
