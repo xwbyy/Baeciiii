@@ -206,7 +206,25 @@
       const result = await response.json();
       
       if (result.success) {
-        // ... existing success logic ...
+        currentRefId = result.data.refId;
+        document.getElementById('depositForm').classList.add('hidden');
+        document.getElementById('paymentSection').classList.remove('hidden');
+        document.getElementById('payAmount').textContent = 'Rp ' + result.data.totalBayar.toLocaleString('id-ID');
+        
+        const payLink = document.getElementById('payLink');
+        payLink.href = result.data.payUrl;
+        
+        const qrSection = document.getElementById('qrSection');
+        const qrImage = document.getElementById('qrImage');
+        
+        if (result.data.qrLink || result.data.qrString) {
+          qrSection.classList.remove('hidden');
+          qrImage.src = result.data.qrLink || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(result.data.qrString)}`;
+        } else {
+          qrSection.classList.add('hidden');
+        }
+        
+        startAutoCheck();
       } else {
         showAlert('Gagal', result.message, 'error');
       }

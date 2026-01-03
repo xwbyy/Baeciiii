@@ -36,16 +36,20 @@ async function createOrder(refId, nominal, method) {
     const { merchantId, secretKey } = await getCredentials();
     
     if (!merchantId || !secretKey) {
+      console.error('[TokoPay] Configuration missing:', { merchantId: !!merchantId, secretKey: !!secretKey });
       throw new Error('TokoPay belum dikonfigurasi');
     }
     
     const url = `${API_BASE}/order?merchant=${merchantId}&secret=${secretKey}&ref_id=${refId}&nominal=${nominal}&metode=${method}`;
+    console.log('[TokoPay] Creating order:', { refId, nominal, method, url: url.replace(secretKey, '***') });
     
     const response = await axios.get(url);
+    console.log('[TokoPay] Response:', JSON.stringify(response.data, null, 2));
     return response.data;
   } catch (error) {
-    console.error('TokoPay Error:', error.response?.data || error.message);
-    throw new Error('Gagal membuat order pembayaran');
+    const errorData = error.response?.data || error.message;
+    console.error('[TokoPay] Error creating order:', JSON.stringify(errorData, null, 2));
+    throw new Error('Gagal membuat order pembayaran: ' + (errorData.message || error.message));
   }
 }
 
@@ -58,11 +62,14 @@ async function checkOrderStatus(refId, nominal, method) {
     }
     
     const url = `${API_BASE}/order?merchant=${merchantId}&secret=${secretKey}&ref_id=${refId}&nominal=${nominal}&metode=${method}`;
+    console.log('[TokoPay] Checking status:', { refId, nominal, method });
     
     const response = await axios.get(url);
+    console.log('[TokoPay] Status Response:', JSON.stringify(response.data, null, 2));
     return response.data;
   } catch (error) {
-    console.error('TokoPay Status Error:', error.response?.data || error.message);
+    const errorData = error.response?.data || error.message;
+    console.error('[TokoPay] Status Check Error:', JSON.stringify(errorData, null, 2));
     throw new Error('Gagal mengecek status order');
   }
 }
