@@ -35,14 +35,22 @@
       </div>
       
       <div class="glass-card rounded-3xl p-6 mb-6">
-        <h3 class="font-semibold mb-4 flex items-center gap-2">
-          <i class="fas fa-bell text-purple-400"></i>
-          Notifikasi
-        </h3>
-        <div class="space-y-3">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold flex items-center gap-2">
+            <i class="fas fa-bell text-purple-400"></i>
+            Notifikasi
+          </h3>
           <% if (typeof notifications !== 'undefined' && notifications.length > 0) { %>
-            <% notifications.forEach(n => { %>
-              <div class="p-4 rounded-xl glass border-l-4 <%= n.type === 'success' ? 'border-green-500' : n.type === 'danger' ? 'border-red-500' : n.type === 'warning' ? 'border-yellow-500' : 'border-blue-500' %> <%= n.isRead === 'true' ? 'opacity-60' : '' %>" onclick="markRead('<%= n.id %>')">
+            <button onclick="toggleNotifications()" id="toggleNotifBtn" class="text-xs text-purple-400 hover:text-purple-300 transition">
+              <i class="fas fa-chevron-down mr-1"></i> Lihat Semua
+            </button>
+          <% } %>
+        </div>
+        
+        <div id="notificationWrapper" class="space-y-3 max-h-[300px] overflow-hidden transition-all duration-500">
+          <% if (typeof notifications !== 'undefined' && notifications.length > 0) { %>
+            <% notifications.forEach((n, index) => { %>
+              <div class="p-4 rounded-xl glass border-l-4 <%= n.type === 'success' ? 'border-green-500' : n.type === 'danger' ? 'border-red-500' : n.type === 'warning' ? 'border-yellow-500' : 'border-blue-500' %> <%= n.isRead === 'true' ? 'opacity-60' : '' %> notification-item <%= index >= 3 ? 'hidden' : '' %>" onclick="markRead('<%= n.id %>')">
                 <div class="flex justify-between items-start mb-1">
                   <h4 class="font-bold text-sm"><%= n.title %></h4>
                   <span class="text-[10px] text-gray-500"><%= new Date(n.createdAt).toLocaleDateString('id-ID') %></span>
@@ -153,6 +161,27 @@
       await fetch('/profile/notifications/read/' + id, { method: 'POST' });
       location.reload();
     } catch (e) {}
+  }
+
+  function toggleNotifications() {
+    const wrapper = document.getElementById('notificationWrapper');
+    const btn = document.getElementById('toggleNotifBtn');
+    const items = document.querySelectorAll('.notification-item');
+    const isExpanded = wrapper.classList.contains('max-h-none');
+
+    if (isExpanded) {
+      wrapper.classList.remove('max-h-none');
+      wrapper.classList.add('max-h-[300px]');
+      btn.innerHTML = '<i class="fas fa-chevron-down mr-1"></i> Lihat Semua';
+      items.forEach((item, index) => {
+        if (index >= 3) item.classList.add('hidden');
+      });
+    } else {
+      wrapper.classList.remove('max-h-[300px]');
+      wrapper.classList.add('max-h-none');
+      btn.innerHTML = '<i class="fas fa-chevron-up mr-1"></i> Sembunyikan';
+      items.forEach(item => item.classList.remove('hidden'));
+    }
   }
 </script>
 
