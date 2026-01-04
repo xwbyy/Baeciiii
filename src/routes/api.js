@@ -29,6 +29,20 @@ router.get('/digiflazz/products', async (req, res) => {
                     const prodCat = (p.category || '').toLowerCase();
                     
                     if (catLower === 'games' || catLower === 'game') {
+                        // Exclude categories that are clearly not games (like Pulsa, PLN, etc)
+                        // but included in 'Games' or 'Voucher' search results by Digiflazz
+                        const isOperator = prodCat.includes('pulsa') || 
+                                         prodCat.includes('data') || 
+                                         prodCat.includes('internet') ||
+                                         p.brand.toLowerCase().includes('axis') ||
+                                         p.brand.toLowerCase().includes('telkom') ||
+                                         p.brand.toLowerCase().includes('xl') ||
+                                         p.brand.toLowerCase().includes('indosat') ||
+                                         p.brand.toLowerCase().includes('smartfren') ||
+                                         p.brand.toLowerCase().includes('tri');
+
+                        if (isOperator) return false;
+                        
                         return prodCat.includes('game') || prodCat.includes('voucher');
                     }
                     if (catLower === 'emoney' || catLower === 'e-money') {
